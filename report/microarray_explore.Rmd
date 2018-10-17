@@ -1,0 +1,57 @@
+---
+title: "Microarray Data Analysis"
+author: "Jialin Ma"
+date: "October 17, 2018"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Packages
+
+```{r}
+suppressPackageStartupMessages({
+  library(here)
+  library(oligo)
+})
+```
+
+
+## Load the dataset
+
+```{r}
+dataset <- read.celfiles(list.files(here("data/microarray"), full.names = TRUE))
+dataset
+```
+
+
+```{r eval=FALSE, include=FALSE}
+## MA plot
+oligo::MAplot(dataset[, c(10, 20)], pairs = TRUE, ylim = c(-1, 1))
+```
+
+## RMA
+
+The rma method proceeds with background subtraction, normalization and summarization
+using median-polish.
+
+```{r}
+edata <- oligo::rma(dataset)
+edata
+```
+
+## Annotating Genes
+
+```{r}
+library(hgu95av2.db)
+columns(hgu95av2.db)
+head(select(hgu95av2.db, keys = rownames(edata), keytype = "PROBEID", columns = "SYMBOL"))
+head(select(hgu95av2.db, keys = rownames(edata), keytype = "PROBEID", columns = "ENTREZID"))
+```
+
+
+
