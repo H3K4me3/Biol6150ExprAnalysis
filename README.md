@@ -9,7 +9,7 @@ of Dexamethasone on epidermal keratinocytes and A549 cell line.
 ### RNA-seq dataset
 
 The control is mRNA-seq on A549 cell line treated with 100 nM dexamethasone for 0 mins
-with 4 biological replicates. ([link](https://www.encodeproject.org/experiments/ENCSR937WIG/)).
+with 3 biological replicates. ([link](https://www.encodeproject.org/experiments/ENCSR937WIG/)).
 
 The test is mRNA-seq on A549 cell line treated with 100 nM dexamethasone for **4 hours**
 with 4 biological replicates ([link](https://www.encodeproject.org/experiments/ENCSR326PTW/)).
@@ -35,3 +35,15 @@ test samples:
 
 The GEO accession of the dataset is
 [GSE26487](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE26487)
+
+
+## Download the dataset
+
+Within the project root directory, run
+
+```sh
+./script/download_microarray_dataset.sh
+./script/download_rnaseq_dataset.sh
+```
+
+
