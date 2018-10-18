@@ -8,11 +8,15 @@ of Dexamethasone on epidermal keratinocytes and A549 cell line.
 
 ### RNA-seq dataset
 
-The control is mRNA-seq on A549 cell line treated with 100 nM dexamethasone for 0 mins
-with 3 biological replicates. ([link](https://www.encodeproject.org/experiments/ENCSR937WIG/)).
+[Control samples](https://www.encodeproject.org/experiments/ENCSR937WIG/):
 
-The test is mRNA-seq on A549 cell line treated with 100 nM dexamethasone for **4 hours**
-with 4 biological replicates ([link](https://www.encodeproject.org/experiments/ENCSR326PTW/)).
+mRNA-seq on A549 cell line treated with 100 nM dexamethasone for 0 mins
+with 3 biological replicates.
+
+[Test samples](https://www.encodeproject.org/experiments/ENCSR326PTW/):
+
+mRNA-seq on A549 cell line treated with 100 nM dexamethasone for **4 hours**
+with 4 biological replicates.
 
 
 ### Microarray dataset
@@ -46,4 +50,17 @@ Within the project root directory, run
 ./script/download_rnaseq_dataset.sh
 ```
 
+It may take a long time to download the RNA-seq data.
+
+We also have to download the transcript fasta file in order to do transcript quantification
+with the RNA-seq data.
+
+```sh
+mkdir -p data
+bash -c 'cd data && curl -O "ftp://ftp.ensembl.org/pub/release-94/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz"'
+```
+
+## Reference
+
+- [New RNA-seq workflows](https://www.bioconductor.org/help/course-materials/2016/CSAMA/lect-07-modern-rnaseq/ModernRNAseqAnalysis.pdf)
 
