@@ -41,7 +41,7 @@ The GEO accession of the dataset is
 [GSE26487](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE26487)
 
 
-## Download the dataset
+### Download the dataset
 
 Within the project root directory, run
 
@@ -58,7 +58,18 @@ with the RNA-seq data.
 ```sh
 mkdir -p data
 bash -c 'cd data && curl -O "ftp://ftp.ensembl.org/pub/release-94/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz"'
+gunzip 'data/Homo_sapiens.GRCh38.cdna.all.fa.gz'
 ```
+
+## RNA-seq data processing
+
+### Build transcriptome index for salmon
+
+```sh
+salmon index -t data/Homo_sapiens.GRCh38.cdna.all.fa -i data/transriptome_index -p 8
+```
+
+
 
 ## Reference
 
