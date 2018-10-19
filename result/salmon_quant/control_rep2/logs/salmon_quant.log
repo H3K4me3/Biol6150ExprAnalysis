@@ -1,0 +1,87 @@
+[2018-10-19 05:47:34.465] [jointLog] [info] Fragment incompatibility prior below threshold.  Incompatible fragments will be ignored.
+[2018-10-19 05:47:34.465] [jointLog] [info] parsing read library format
+[2018-10-19 05:47:34.465] [jointLog] [info] There is 1 library.
+[2018-10-19 05:47:34.484] [jointLog] [info] Loading Quasi index
+[2018-10-19 05:47:34.484] [jointLog] [info] Loading 32-bit quasi index
+[2018-10-19 05:47:48.982] [jointLog] [info] done
+[2018-10-19 05:47:48.982] [jointLog] [info] Index contained 175,775 targets
+[2018-10-19 05:47:49.296] [jointLog] [info] Automatically detected most likely library type as ISR
+[2018-10-19 05:51:07.369] [jointLog] [info] Thread saw mini-batch with a maximum of 2.24% zero probability fragments
+[2018-10-19 05:51:07.369] [jointLog] [info] Thread saw mini-batch with a maximum of 2.22% zero probability fragments
+[2018-10-19 05:51:07.371] [jointLog] [info] Thread saw mini-batch with a maximum of 2.20% zero probability fragments
+[2018-10-19 05:51:07.387] [jointLog] [info] Thread saw mini-batch with a maximum of 2.40% zero probability fragments
+[2018-10-19 05:51:07.396] [jointLog] [info] Thread saw mini-batch with a maximum of 2.26% zero probability fragments
+[2018-10-19 05:51:07.399] [jointLog] [info] Thread saw mini-batch with a maximum of 2.28% zero probability fragments
+[2018-10-19 05:51:07.418] [jointLog] [info] Thread saw mini-batch with a maximum of 2.34% zero probability fragments
+[2018-10-19 05:51:07.427] [jointLog] [info] Thread saw mini-batch with a maximum of 2.38% zero probability fragments
+[2018-10-19 05:51:07.714] [jointLog] [info] Computed 483,264 rich equivalence classes for further processing
+[2018-10-19 05:51:07.714] [jointLog] [info] Counted 68,203,677 total reads in the equivalence classes 
+[2018-10-19 05:51:07.722] [jointLog] [info] Mapping rate = 88.3331%
+
+[2018-10-19 05:51:07.722] [jointLog] [info] finished quantifyLibrary()
+[2018-10-19 05:51:07.722] [jointLog] [info] Starting optimizer
+[2018-10-19 05:51:07.848] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2018-10-19 05:51:07.865] [jointLog] [info] iteration = 0 | max rel diff. = 30.534
+[2018-10-19 05:51:07.715] [fileLog] [info] 
+At end of round 0
+==================
+Observed 77211931 total fragments (77211931 in most recent round)
+
+[2018-10-19 05:51:09.409] [jointLog] [info] iteration = 100 | max rel diff. = 12.1629
+[2018-10-19 05:51:10.960] [jointLog] [info] iteration = 200 | max rel diff. = 1.40443
+[2018-10-19 05:51:12.768] [jointLog] [info] iteration = 300 | max rel diff. = 3.7286
+[2018-10-19 05:51:14.563] [jointLog] [info] iteration = 400 | max rel diff. = 14.398
+[2018-10-19 05:51:16.351] [jointLog] [info] iteration = 500 | max rel diff. = 0.605762
+[2018-10-19 05:51:18.140] [jointLog] [info] iteration = 600 | max rel diff. = 2.0251
+[2018-10-19 05:51:20.051] [jointLog] [info] iteration = 700 | max rel diff. = 3.05957
+[2018-10-19 05:51:21.946] [jointLog] [info] iteration = 800 | max rel diff. = 0.575806
+[2018-10-19 05:51:23.776] [jointLog] [info] iteration = 900 | max rel diff. = 0.435204
+[2018-10-19 05:51:25.710] [jointLog] [info] iteration = 1,000 | max rel diff. = 1.35437
+[2018-10-19 05:51:27.654] [jointLog] [info] iteration = 1,100 | max rel diff. = 0.698718
+[2018-10-19 05:51:29.453] [jointLog] [info] iteration = 1,200 | max rel diff. = 0.158647
+[2018-10-19 05:51:31.305] [jointLog] [info] iteration = 1,300 | max rel diff. = 0.136998
+[2018-10-19 05:51:33.136] [jointLog] [info] iteration = 1,400 | max rel diff. = 0.107054
+[2018-10-19 05:51:35.103] [jointLog] [info] iteration = 1,500 | max rel diff. = 0.170507
+[2018-10-19 05:51:37.100] [jointLog] [info] iteration = 1,600 | max rel diff. = 0.0368015
+[2018-10-19 05:51:39.098] [jointLog] [info] iteration = 1,700 | max rel diff. = 0.0175279
+[2018-10-19 05:51:40.938] [jointLog] [info] iteration = 1,800 | max rel diff. = 1.68322
+[2018-10-19 05:51:42.767] [jointLog] [info] iteration = 1,900 | max rel diff. = 0.0748237
+[2018-10-19 05:51:43.086] [jointLog] [info] iteration = 1,918 | max rel diff. = 0.00677574
+[2018-10-19 05:51:43.090] [jointLog] [info] Finished optimizer
+[2018-10-19 05:51:43.090] [jointLog] [info] writing output 
+
+[2018-10-19 05:51:43.485] [jointLog] [info] Starting Bootstrapping
+[2018-10-19 05:51:43.611] [jointLog] [info] Will draw 30 bootstrap samples
+[2018-10-19 05:51:43.611] [jointLog] [info] Optimizing over 483,264 equivalence classes
+[2018-10-19 05:51:43.643] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2018-10-19 05:57:40.562] [jointLog] [info] wrote 1 bootstraps
+[2018-10-19 05:57:57.939] [jointLog] [info] wrote 2 bootstraps
+[2018-10-19 05:58:08.200] [jointLog] [info] wrote 3 bootstraps
+[2018-10-19 05:58:31.892] [jointLog] [info] wrote 4 bootstraps
+[2018-10-19 05:58:49.911] [jointLog] [info] wrote 5 bootstraps
+[2018-10-19 05:59:27.233] [jointLog] [info] wrote 6 bootstraps
+[2018-10-19 06:00:03.369] [jointLog] [info] wrote 7 bootstraps
+[2018-10-19 06:03:30.178] [jointLog] [info] wrote 8 bootstraps
+[2018-10-19 06:04:31.364] [jointLog] [info] wrote 9 bootstraps
+[2018-10-19 06:05:31.888] [jointLog] [info] wrote 10 bootstraps
+[2018-10-19 06:06:27.766] [jointLog] [info] wrote 11 bootstraps
+[2018-10-19 06:06:40.191] [jointLog] [info] wrote 12 bootstraps
+[2018-10-19 06:06:57.754] [jointLog] [info] wrote 13 bootstraps
+[2018-10-19 06:07:56.384] [jointLog] [info] wrote 14 bootstraps
+[2018-10-19 06:10:01.708] [jointLog] [info] wrote 15 bootstraps
+[2018-10-19 06:11:34.576] [jointLog] [info] wrote 16 bootstraps
+[2018-10-19 06:11:35.960] [jointLog] [info] wrote 17 bootstraps
+[2018-10-19 06:12:05.383] [jointLog] [info] wrote 18 bootstraps
+[2018-10-19 06:13:42.342] [jointLog] [info] wrote 19 bootstraps
+[2018-10-19 06:14:58.863] [jointLog] [info] wrote 20 bootstraps
+[2018-10-19 06:15:07.963] [jointLog] [info] wrote 21 bootstraps
+[2018-10-19 06:18:08.699] [jointLog] [info] wrote 22 bootstraps
+[2018-10-19 06:19:19.224] [jointLog] [info] wrote 23 bootstraps
+[2018-10-19 06:19:56.599] [jointLog] [info] wrote 24 bootstraps
+[2018-10-19 06:20:01.684] [jointLog] [info] wrote 25 bootstraps
+[2018-10-19 06:21:28.137] [jointLog] [info] wrote 26 bootstraps
+[2018-10-19 06:21:28.412] [jointLog] [info] wrote 27 bootstraps
+[2018-10-19 06:21:30.971] [jointLog] [info] wrote 28 bootstraps
+[2018-10-19 06:22:08.111] [jointLog] [info] wrote 29 bootstraps
+[2018-10-19 06:22:38.168] [jointLog] [info] wrote 30 bootstraps
+[2018-10-19 06:22:38.194] [jointLog] [info] Finished Bootstrapping

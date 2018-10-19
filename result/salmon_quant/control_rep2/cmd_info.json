@@ -1,0 +1,11 @@
+{
+    "salmon_version": "0.11.3",
+    "index": "data/transriptome_index",
+    "libType": "A",
+    "threads": "8",
+    "mates1": "data/rnaseq/control_rep2_read1.fastq.gz",
+    "mates2": "data/rnaseq/control_rep2_read2.fastq.gz",
+    "output": "result/salmon_quant/control_rep2",
+    "numBootstraps": "30",
+    "auxDir": "aux_info"
+}

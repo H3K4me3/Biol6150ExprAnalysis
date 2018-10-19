@@ -1,0 +1,21 @@
+{
+    "read_files": "[ data/rnaseq/control_rep3_read1.fastq.gz, data/rnaseq/control_rep3_read2.fastq.gz]",
+    "expected_format": "ISR",
+    "compatible_fragment_ratio": 1.0,
+    "num_compatible_fragments": 61656096,
+    "num_assigned_fragments": 61656096,
+    "num_frags_with_consistent_mappings": 57909983,
+    "num_frags_with_inconsistent_or_orphan_mappings": 3746211,
+    "MSF": 0,
+    "OSF": 0,
+    "ISF": 207,
+    "MSR": 0,
+    "OSR": 0,
+    "ISR": 57909983,
+    "SF": 1209567,
+    "SR": 2536437,
+    "MU": 0,
+    "OU": 0,
+    "IU": 0,
+    "U": 0
+}
