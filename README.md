@@ -69,6 +69,13 @@ gunzip 'data/Homo_sapiens.GRCh38.cdna.all.fa.gz'
 salmon index -t data/Homo_sapiens.GRCh38.cdna.all.fa -i data/transriptome_index -p 8
 ```
 
+### Transcript Quantification
+
+Run the script to do transccript quantification for the samples.
+
+```sh
+./script/salmon_quant.sh
+```
 
 
 ## Reference
