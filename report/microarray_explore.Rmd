@@ -8,15 +8,15 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, collapse = FALSE)
 ```
 
 ## Load Packages
 
 ```{r}
 suppressPackageStartupMessages({
-  library(here)
-  library(oligo)
+    library(here)
+    library(oligo)
 })
 ```
 
@@ -25,13 +25,29 @@ suppressPackageStartupMessages({
 
 ```{r}
 dataset <- read.celfiles(list.files(here("data/microarray"), full.names = TRUE))
+dataset <- dataset[, c(paste0(c("GSM651310", "GSM651320", "GSM651315", "GSM651325"), ".CEL.gz"))]
+sampleNames(dataset) <- c("control_rep1", "control_rep2", "treat_rep1", "treat_rep2")
 dataset
 ```
 
+## Quality control
+
+### Boxplot
+
+```{r}
+boxplot(dataset)
+```
+
+### MA plot
+
+```{r}
+oligo::MAplot(dataset, pairs = TRUE, ylim = c(-1, 1))
+```
+
+### Quality Measures
 
 ```{r eval=FALSE, include=FALSE}
-## MA plot
-oligo::MAplot(dataset[, c(10, 20)], pairs = TRUE, ylim = c(-1, 1))
+simpleaffy::qc
 ```
 
 ## RMA
@@ -44,13 +60,83 @@ edata <- oligo::rma(dataset)
 edata
 ```
 
+### Boxplot before and after normalization
+
+```{r}
+par(mfrow = c(1,2))
+boxplot(dataset)
+boxplot(edata)
+par(mfrow = c(1,1))
+```
+
+### MA plot after normalization
+
+```{r}
+oligo::MAplot(edata, pairs = TRUE, ylim = c(-1, 1))
+```
+
+## Identification of differentially expressed genes
+
+```{r}
+library(limma)
+f <- factor(c("control", "control", "treat", "treat"))
+design <- model.matrix(~ 0 + f)
+colnames(design)
+colnames(design) <- c("control", "treat")
+design
+```
+
+```{r}
+data.fit <- lmFit(exprs(edata), design)
+head(data.fit$coefficients)
+```
+
+```{r}
+contrast.matrix <- makeContrasts(treat-control,levels=design)
+data.fit.con <- contrasts.fit(data.fit,contrast.matrix)
+```
+
+Perform the moderated t-test
+
+```{r}
+data.fit.eb <- eBayes(data.fit.con)
+names(data.fit.eb)
+head(data.fit.eb$coefficients)
+head(data.fit.eb$t)
+head(data.fit.eb$p.value)
+```
+
+### Volcano plot
+
+```{r}
+volcanoplot(data.fit.eb,highlight=10)
+```
+
+### Adjust p value for multiple testing and select DE genes
+
+```{r}
+top <- topTable(data.fit.eb,number=200,adjust.method="BH")
+head(top)
+tail(top)
+```
+
+Should we use adjusted p value to select the genes?
+
 ## Annotating Genes
 
 ```{r}
-library(hgu95av2.db)
-columns(hgu95av2.db)
-head(select(hgu95av2.db, keys = rownames(edata), keytype = "PROBEID", columns = "SYMBOL"))
-head(select(hgu95av2.db, keys = rownames(edata), keytype = "PROBEID", columns = "ENTREZID"))
+suppressPackageStartupMessages({
+    library(hgu95av2.db)
+})
+getgene <- function(probeid) {
+    ans <- mapIds(hgu95av2.db::hgu95av2.db,
+                  keys = probeid, keytype = "PROBEID", column = "SYMBOL", multiVals = "first")
+    unname(ans)
+}
+genes <- getgene(rownames(top))
+top$GeneName <- genes
+top <- top[,c("P.Value", "adj.P.Val", "GeneName")]
+head(top, n = 30)
 ```
 
 
