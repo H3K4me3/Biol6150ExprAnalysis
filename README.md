@@ -77,6 +77,9 @@ Run the script to do transccript quantification for the samples.
 ./script/salmon_quant.sh
 ```
 
+The results of the quantification have been added to the repository within the
+branch `with_quant_result`.
+
 
 ## Reference
 
