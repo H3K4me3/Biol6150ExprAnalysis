@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jialin Ma" />
+
+<meta name="date" content="2018-10-17" />
+
+<title>Microarray Data Analysis</title>
+
+<script src="microarray_explore_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="microarray_explore_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="microarray_explore_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="microarray_explore_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="microarray_explore_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="microarray_explore_files/navigation-1.1/tabsets.js"></script>
+<link href="microarray_explore_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="microarray_explore_files/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Microarray Data Analysis</h1>
+<h4 class="author"><em>Jialin Ma</em></h4>
+<h4 class="date"><em>October 17, 2018</em></h4>
+
+</div>
+
+
+<div id="load-packages" class="section level2">
+<h2>Load Packages</h2>
+<pre class="r"><code>suppressPackageStartupMessages({
+    library(here)
+    library(oligo)
+})</code></pre>
+</div>
+<div id="load-the-dataset" class="section level2">
+<h2>Load the dataset</h2>
+<pre class="r"><code>dataset &lt;- read.celfiles(list.files(here(&quot;data/microarray&quot;), full.names = TRUE))</code></pre>
+<pre><code>## Platform design info loaded.</code></pre>
+<pre><code>## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651310.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651315.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651320.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651325.CEL.gz</code></pre>
+<pre class="r"><code>dataset &lt;- dataset[, c(paste0(c(&quot;GSM651310&quot;, &quot;GSM651320&quot;, &quot;GSM651315&quot;, &quot;GSM651325&quot;), &quot;.CEL.gz&quot;))]
+sampleNames(dataset) &lt;- c(&quot;control_rep1&quot;, &quot;control_rep2&quot;, &quot;treat_rep1&quot;, &quot;treat_rep2&quot;)
+pData(dataset)$group &lt;- c(&quot;control&quot;, &quot;control&quot;, &quot;treat&quot;, &quot;treat&quot;)
+dataset</code></pre>
+<pre><code>## ExpressionFeatureSet (storageMode: lockedEnvironment)
+## assayData: 409600 features, 4 samples 
+##   element names: exprs 
+## protocolData
+##   rowNames: control_rep1 control_rep2 treat_rep1 treat_rep2
+##   varLabels: exprs dates
+##   varMetadata: labelDescription channel
+## phenoData
+##   rowNames: control_rep1 control_rep2 treat_rep1 treat_rep2
+##   varLabels: index group
+##   varMetadata: labelDescription channel
+## featureData: none
+## experimentData: use &#39;experimentData(object)&#39;
+## Annotation: pd.hg.u95av2</code></pre>
+</div>
+<div id="quality-control" class="section level2">
+<h2>Quality control</h2>
+<div id="boxplot" class="section level3">
+<h3>Boxplot</h3>
+<pre class="r"><code>boxplot(dataset, target = &quot;core&quot;)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+</div>
+<div id="ma-plot" class="section level3">
+<h3>MA plot</h3>
+<pre class="r"><code>oligo::MAplot(dataset, pairs = TRUE, ylim = c(-1, 1))</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+</div>
+<div id="quality-report-of-the-raw-data" class="section level3">
+<h3>Quality report of the raw data</h3>
+<p>The following will generate a quality report of the raw microarray data in <code>docs/microarray_qualitymetrics</code> directory.</p>
+<pre class="r"><code>library(arrayQualityMetrics)
+arrayQualityMetrics(expressionset = dataset,
+    outdir = &quot;docs/microarray_qualitymetrics&quot;,
+    force = TRUE, do.logtransform = TRUE,
+    intgroup = c(&quot;group&quot;))</code></pre>
+</div>
+</div>
+<div id="rma" class="section level2">
+<h2>RMA</h2>
+<p>The RMA method proceeds with background subtraction, normalization and summarization using a deconvolution method for background correction, quantile normalization and the RMA (robust multichip average) algorithm for summarization.</p>
+<pre class="r"><code>edata &lt;- oligo::rma(dataset)</code></pre>
+<pre><code>## Background correcting
+## Normalizing
+## Calculating Expression</code></pre>
+<pre class="r"><code>edata</code></pre>
+<pre><code>## ExpressionSet (storageMode: lockedEnvironment)
+## assayData: 12625 features, 4 samples 
+##   element names: exprs 
+## protocolData
+##   rowNames: control_rep1 control_rep2 treat_rep1 treat_rep2
+##   varLabels: exprs dates
+##   varMetadata: labelDescription channel
+## phenoData
+##   rowNames: control_rep1 control_rep2 treat_rep1 treat_rep2
+##   varLabels: index group
+##   varMetadata: labelDescription channel
+## featureData: none
+## experimentData: use &#39;experimentData(object)&#39;
+## Annotation: pd.hg.u95av2</code></pre>
+</div>
+<div id="access-the-quality-after-normalization" class="section level2">
+<h2>Access the quality after normalization</h2>
+<div id="pca-plot-before-and-after-normalization" class="section level3">
+<h3>PCA plot before and after normalization</h3>
+<pre class="r"><code>library(ggplot2)
+library(cowplot)
+plot_grid(
+    local({
+        PCA_raw &lt;- prcomp(t(log2(exprs(dataset))), scale = FALSE)
+    
+        dataGG &lt;- data.frame(PC1 = PCA_raw$x[,1], PC2 = PCA_raw$x[,2],
+                         Group = pData(dataset)$group)
+            
+        qplot(PC1, PC2, data = dataGG, color = Group,
+              main = &quot;PCA plot of the raw data (log-transformed)&quot;, asp = 1.0, geom = &quot;text&quot;,
+        label = sampleNames(dataset)) + scale_colour_brewer(palette = &quot;Set2&quot;)
+    }),
+    local({
+        PCA &lt;- prcomp(t(exprs(edata)), scale = FALSE)
+        dataGG &lt;- data.frame(PC1 = PCA$x[,1], PC2 = PCA$x[,2],
+                  Group = pData(dataset)$group)
+        qplot(PC1, PC2, data = dataGG, color =  Group,
+            main = &quot;PCA plot of the normalized data&quot;, asp = 1.0, geom = &quot;text&quot;,
+            label = sampleNames(edata)) +
+            scale_colour_brewer(palette = &quot;Set2&quot;)
+    })
+)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div id="boxplot-before-and-after-normalization" class="section level3">
+<h3>Boxplot before and after normalization</h3>
+<pre class="r"><code>par(mfrow = c(1,2))
+boxplot(dataset)
+boxplot(edata)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>par(mfrow = c(1,1))</code></pre>
+</div>
+<div id="ma-plot-after-normalization" class="section level3">
+<h3>MA plot after normalization</h3>
+<pre class="r"><code>oligo::MAplot(edata, pairs = TRUE, ylim = c(-1, 1))</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+</div>
+<div id="heatmap-with-sample-to-sample-distance-after-normalization" class="section level3">
+<h3>Heatmap with sample-to-sample distance after normalization</h3>
+<p>It can not provide too much information for us since the number of samples is limited.</p>
+<pre class="r"><code>library(RColorBrewer)
+library(pheatmap)
+dists &lt;- as.matrix(dist(t(exprs(edata)), method = &quot;manhattan&quot;))
+diag(dists) &lt;- NA
+hmcol &lt;- colorRampPalette(rev(brewer.pal(9, &quot;PuOr&quot;)))(255)
+pheatmap(dists, col = rev(hmcol), clustering_distance_rows = &quot;manhattan&quot;,
+                    clustering_distance_cols = &quot;manhattan&quot;)</code></pre>
+</div>
+</div>
+<div id="filter-based-on-intensity" class="section level2">
+<h2>Filter based on intensity</h2>
+<p>Microarray data commonly show a large number of probes in the background intensity range. They also do not change much across arrays. Hence they combine a low variance with a low intensity. We want to filter these results as they may contribute to false positive results in the differential expression analysis.</p>
+<pre class="r"><code>edata_medians &lt;- rowMedians(exprs(edata))
+hist_res &lt;- hist(edata_medians, 100, col=&quot;#e7efd8&quot;, freq = FALSE,
+                 main = &quot;Histogram of the median intensities&quot;,
+                 xlab = &quot;Median intensities&quot;)
+emp_mu &lt;- hist_res$breaks[which.max(hist_res$density)]
+emp_sd &lt;- mad(edata_medians)/2
+prop_cental &lt;- 0.50
+lines(sort(edata_medians),
+      prop_cental*dnorm(sort(edata_medians), mean = emp_mu, sd = emp_sd),
+    col = &quot;grey10&quot;, lwd = 4)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre class="r"><code>cut_val &lt;- 0.05 / prop_cental
+thresh_median &lt;- qnorm(0.05 / prop_cental, emp_mu, emp_sd)
+samples_cutoff &lt;- 2
+idx_thresh_median &lt;- apply(exprs(edata), 1, function(x){
+                   sum(x &gt; thresh_median) &gt;= samples_cutoff})
+table(idx_thresh_median)</code></pre>
+<pre><code>## idx_thresh_median
+## FALSE  TRUE 
+##  5510  7115</code></pre>
+<pre class="r"><code>edata &lt;- subset(edata, idx_thresh_median)</code></pre>
+</div>
+<div id="identification-of-differentially-expressed-genes" class="section level2">
+<h2>Identification of differentially expressed genes</h2>
+<p>Create a simple design matrix.</p>
+<pre class="r"><code>library(limma)
+f &lt;- factor(c(&quot;control&quot;, &quot;control&quot;, &quot;treat&quot;, &quot;treat&quot;))
+design &lt;- model.matrix(~ 0 + f)
+colnames(design)</code></pre>
+<pre><code>## [1] &quot;fcontrol&quot; &quot;ftreat&quot;</code></pre>
+<pre class="r"><code>colnames(design) &lt;- c(&quot;control&quot;, &quot;treat&quot;)
+design</code></pre>
+<pre><code>##   control treat
+## 1       1     0
+## 2       1     0
+## 3       0     1
+## 4       0     1
+## attr(,&quot;assign&quot;)
+## [1] 1 1
+## attr(,&quot;contrasts&quot;)
+## attr(,&quot;contrasts&quot;)$f
+## [1] &quot;contr.treatment&quot;</code></pre>
+<p>We can fit the linear model, define appropriate contrast to test the hypothesis on treatment effect and compute the moderated t–statistics by calling the <code>eBayes</code> function.</p>
+<pre class="r"><code>data.fit &lt;- lmFit(exprs(edata), design)
+head(data.fit$coefficients)</code></pre>
+<pre><code>##            control    treat
+## 100_g_at  7.668756 7.715222
+## 1000_at   7.500988 7.509880
+## 1003_s_at 6.080299 5.955531
+## 1004_at   5.637423 5.510949
+## 1005_at   7.805104 9.312773
+## 1006_at   7.453394 6.403360</code></pre>
+<pre class="r"><code>contrast.matrix &lt;- makeContrasts(treat-control,levels=design)
+data.fit.con &lt;- contrasts.fit(data.fit,contrast.matrix)
+data.fit.eb &lt;- eBayes(data.fit.con)</code></pre>
+<p>Volcano plot to show the distribution of fold change and p value.</p>
+<pre class="r"><code>volcanoplot(data.fit.eb,highlight=10)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>Then we sort the results by their absolute t-statistics.</p>
+<pre class="r"><code>top &lt;- topTable(data.fit.eb, number = Inf)
+head(top)</code></pre>
+<pre><code>##             logFC  AveExpr        t      P.Value  adj.P.Val        B
+## 37701_at 4.487768 7.288447 23.90482 8.923836e-07 0.00634931 3.279131
+## 39528_at 2.155203 7.214587 14.46714 1.363637e-05 0.03491603 2.484241
+## 1776_at  2.090149 7.318168 13.66205 1.855341e-05 0.03491603 2.354451
+## 39681_at 2.219663 5.720843 13.51932 1.962953e-05 0.03491603 2.329679
+## 40202_at 1.941558 6.657501 12.65317 2.798882e-05 0.03982809 2.166516
+## 36630_at 1.995351 7.579214 11.72145 4.209550e-05 0.04991825 1.962962</code></pre>
+<p>Check how many results can we get if we use a p value cutoff by 0.001 or an adjusted p value cutoff by 0.05.</p>
+<pre class="r"><code>table(top$adj.P.Val &lt; 0.05)</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##  7109     6</code></pre>
+<pre class="r"><code>table(top$P.Value &lt; 0.001)</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##  7092    23</code></pre>
+<p>We notice that the number of differential expressed genes are limited, which indicates the the effect of 4 hour DEX treatment may not be significant in altering the gene expression.</p>
+<p>Then plot a histogram of p value distribution.</p>
+<pre class="r"><code>hist(top$P.Value, col = brewer.pal(3, name = &quot;Set2&quot;)[1],
+      main = &quot;Control vs Treatment of DEX by 4 hours&quot;, xlab = &quot;p-values&quot;)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>We zoom in the plot to see p value distribution between 0 and 0.1.</p>
+<pre class="r"><code>hist(top$P.Value[top$P.Value &lt; 0.1], col = brewer.pal(3, name = &quot;Set2&quot;)[1],
+      main = &quot;Control vs Treatment of DEX by 4 hours&quot;, xlab = &quot;p-values&quot;)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>Zoom in again and the orange bin indicates the differentially expressed genes if we use a p value cutoff by 0.001.</p>
+<pre class="r"><code>local({
+    breaks &lt;- 0:10/1000
+    color1 &lt;- brewer.pal(3, name = &quot;Set2&quot;)[1]
+    color2 &lt;- brewer.pal(3, name = &quot;Set2&quot;)[2]
+    color &lt;- rep.int(color1, length(breaks) - 1)
+    color[1] &lt;- color2
+    data &lt;- top$P.Value[top$P.Value &lt; 0.01]
+    hist(data, col = color,
+         main = &quot;Control vs Treatment of DEX by 4 hours&quot;, xlab = &quot;p-values&quot;, breaks = breaks)
+})</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+</div>
+<div id="annotating-genes" class="section level2">
+<h2>Annotating genes</h2>
+<p>We need to annotate the gene names by the probe IDs.</p>
+<pre class="r"><code>suppressPackageStartupMessages({
+    library(hgu95av2.db)
+})
+get_symbol &lt;- function(probeid) {
+    ans &lt;- mapIds(hgu95av2.db::hgu95av2.db,
+                  keys = probeid, keytype = &quot;PROBEID&quot;, column = &quot;SYMBOL&quot;, multiVals = &quot;first&quot;)
+    unname(ans)
+}
+get_genename &lt;- function(probeid) {
+    ans &lt;- mapIds(hgu95av2.db::hgu95av2.db,
+                  keys = probeid, keytype = &quot;PROBEID&quot;, column = &quot;GENENAME&quot;, multiVals = &quot;first&quot;)
+    unname(ans)
+}
+top$symbol &lt;- get_symbol(rownames(top))</code></pre>
+<pre><code>## &#39;select()&#39; returned 1:many mapping between keys and columns</code></pre>
+<pre class="r"><code>top$gene_name &lt;- get_genename(rownames(top))</code></pre>
+<pre><code>## &#39;select()&#39; returned 1:many mapping between keys and columns</code></pre>
+</div>
+<div id="generate-a-table-of-differentially-expressed-genes" class="section level2">
+<h2>Generate a table of differentially expressed genes</h2>
+<p>We use a p value cutoff by 0.001.</p>
+<pre class="r"><code>top &lt;- top[, c(&quot;symbol&quot;, &quot;gene_name&quot;, &quot;logFC&quot;, &quot;P.Value&quot;, &quot;adj.P.Val&quot;)]
+top &lt;- cbind(data.frame(probeID = rownames(top), stringsAsFactors = FALSE), top)
+rownames(top) &lt;- NULL
+top &lt;- top[top$P.Value &lt; 0.001,]
+knitr::kable(top)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">probeID</th>
+<th align="left">symbol</th>
+<th align="left">gene_name</th>
+<th align="right">logFC</th>
+<th align="right">P.Value</th>
+<th align="right">adj.P.Val</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">37701_at</td>
+<td align="left">RGS2</td>
+<td align="left">regulator of G protein signaling 2</td>
+<td align="right">4.4877683</td>
+<td align="right">0.0000009</td>
+<td align="right">0.0063493</td>
+</tr>
+<tr class="even">
+<td align="left">39528_at</td>
+<td align="left">RRAD</td>
+<td align="left">RRAD, Ras related glycolysis inhibitor and calcium channel regulator</td>
+<td align="right">2.1552028</td>
+<td align="right">0.0000136</td>
+<td align="right">0.0349160</td>
+</tr>
+<tr class="odd">
+<td align="left">1776_at</td>
+<td align="left">RRAD</td>
+<td align="left">RRAD, Ras related glycolysis inhibitor and calcium channel regulator</td>
+<td align="right">2.0901488</td>
+<td align="right">0.0000186</td>
+<td align="right">0.0349160</td>
+</tr>
+<tr class="even">
+<td align="left">39681_at</td>
+<td align="left">ZBTB16</td>
+<td align="left">zinc finger and BTB domain containing 16</td>
+<td align="right">2.2196632</td>
+<td align="right">0.0000196</td>
+<td align="right">0.0349160</td>
+</tr>
+<tr class="odd">
+<td align="left">40202_at</td>
+<td align="left">KLF9</td>
+<td align="left">Kruppel like factor 9</td>
+<td align="right">1.9415580</td>
+<td align="right">0.0000280</td>
+<td align="right">0.0398281</td>
+</tr>
+<tr class="even">
+<td align="left">36630_at</td>
+<td align="left">TSC22D3</td>
+<td align="left">TSC22 domain family member 3</td>
+<td align="right">1.9953514</td>
+<td align="right">0.0000421</td>
+<td align="right">0.0499183</td>
+</tr>
+<tr class="odd">
+<td align="left">1814_at</td>
+<td align="left">TGFBR2</td>
+<td align="left">transforming growth factor beta receptor 2</td>
+<td align="right">1.6309718</td>
+<td align="right">0.0000782</td>
+<td align="right">0.0785749</td>
+</tr>
+<tr class="even">
+<td align="left">36629_at</td>
+<td align="left">TSC22D3</td>
+<td align="left">TSC22 domain family member 3</td>
+<td align="right">4.2511045</td>
+<td align="right">0.0000883</td>
+<td align="right">0.0785749</td>
+</tr>
+<tr class="odd">
+<td align="left">37760_at</td>
+<td align="left">BAIAP2</td>
+<td align="left">BAI1 associated protein 2</td>
+<td align="right">1.3443442</td>
+<td align="right">0.0001677</td>
+<td align="right">0.1325401</td>
+</tr>
+<tr class="even">
+<td align="left">31850_at</td>
+<td align="left">GCLC</td>
+<td align="left">glutamate-cysteine ligase catalytic subunit</td>
+<td align="right">1.2492825</td>
+<td align="right">0.0002082</td>
+<td align="right">0.1481454</td>
+</tr>
+<tr class="odd">
+<td align="left">34721_at</td>
+<td align="left">FKBP5</td>
+<td align="left">FK506 binding protein 5</td>
+<td align="right">2.8581334</td>
+<td align="right">0.0002476</td>
+<td align="right">0.1601256</td>
+</tr>
+<tr class="even">
+<td align="left">38013_at</td>
+<td align="left">MTUS1</td>
+<td align="left">microtubule associated scaffold protein 1</td>
+<td align="right">1.1129654</td>
+<td align="right">0.0004426</td>
+<td align="right">0.2624371</td>
+</tr>
+<tr class="odd">
+<td align="left">36100_at</td>
+<td align="left">VEGFA</td>
+<td align="left">vascular endothelial growth factor A</td>
+<td align="right">-1.2173336</td>
+<td align="right">0.0005370</td>
+<td align="right">0.2872803</td>
+</tr>
+<tr class="even">
+<td align="left">33113_at</td>
+<td align="left">CITED2</td>
+<td align="left">Cbp/p300 interacting transactivator with Glu/Asp rich carboxy-terminal domain 2</td>
+<td align="right">1.1614203</td>
+<td align="right">0.0005779</td>
+<td align="right">0.2872803</td>
+</tr>
+<tr class="odd">
+<td align="left">37225_at</td>
+<td align="left">KANK1</td>
+<td align="left">KN motif and ankyrin repeat domains 1</td>
+<td align="right">1.0982152</td>
+<td align="right">0.0006381</td>
+<td align="right">0.2872803</td>
+</tr>
+<tr class="even">
+<td align="left">40855_at</td>
+<td align="left">SAMD4A</td>
+<td align="left">sterile alpha motif domain containing 4A</td>
+<td align="right">1.0942596</td>
+<td align="right">0.0006460</td>
+<td align="right">0.2872803</td>
+</tr>
+<tr class="odd">
+<td align="left">37430_at</td>
+<td align="left">ALOX15B</td>
+<td align="left">arachidonate 15-lipoxygenase, type B</td>
+<td align="right">1.7852935</td>
+<td align="right">0.0007265</td>
+<td align="right">0.2993091</td>
+</tr>
+<tr class="even">
+<td align="left">634_at</td>
+<td align="left">PRSS8</td>
+<td align="left">serine protease 8</td>
+<td align="right">1.0246834</td>
+<td align="right">0.0008545</td>
+<td align="right">0.2993091</td>
+</tr>
+<tr class="odd">
+<td align="left">1052_s_at</td>
+<td align="left">CEBPD</td>
+<td align="left">CCAAT enhancer binding protein delta</td>
+<td align="right">1.2372588</td>
+<td align="right">0.0008687</td>
+<td align="right">0.2993091</td>
+</tr>
+<tr class="even">
+<td align="left">33272_at</td>
+<td align="left">SAA1</td>
+<td align="left">serum amyloid A1</td>
+<td align="right">1.7293550</td>
+<td align="right">0.0009106</td>
+<td align="right">0.2993091</td>
+</tr>
+<tr class="odd">
+<td align="left">40522_at</td>
+<td align="left">GLUL</td>
+<td align="left">glutamate-ammonia ligase</td>
+<td align="right">2.8331430</td>
+<td align="right">0.0009608</td>
+<td align="right">0.2993091</td>
+</tr>
+<tr class="even">
+<td align="left">33900_at</td>
+<td align="left">FSTL3</td>
+<td align="left">follistatin like 3</td>
+<td align="right">0.9502991</td>
+<td align="right">0.0009643</td>
+<td align="right">0.2993091</td>
+</tr>
+<tr class="odd">
+<td align="left">33131_at</td>
+<td align="left">SOX4</td>
+<td align="left">SRY-box 4</td>
+<td align="right">-0.9740144</td>
+<td align="right">0.0009675</td>
+<td align="right">0.2993091</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
