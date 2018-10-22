@@ -87,3 +87,14 @@ branch `with_quant_result`.
 
 - [An end to end workflow for differential gene expression using Affymetrix microarrays](https://f1000research.com/articles/5-1384/v1)
 
+- [Analyze your own microarray data in R/Bioconductor](https://wiki.bits.vib.be/index.php/Analyze_your_own_microarray_data_in_R/Bioconductor)
+
+- [From CEL Files to Annotated Gene Lists](https://biochem.wisc.edu/sites/default/files/facilities/bcrf/tutorials/R/R_Bioconductor/CH25/from_cel_files_to_gene_list.html)
+
+- [RNA-seq analysis is easy as 1-2-3 with limma, Glimma and edgeR](https://www.bioconductor.org/packages/release/workflows/vignettes/RNAseq123/inst/doc/limmaWorkflow.html)
+
+- [RNA-seq workflow: gene-level exploratory analysis and differential expression](https://www.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html)
+
+- [From reads to genes to pathways: differential expression analysis of RNA-Seq experiments using Rsubread and the edgeR quasi-likelihood pipeline](https://www.bioconductor.org/packages/release/workflows/vignettes/RnaSeqGeneEdgeRQL/inst/doc/edgeRQL.html)
+
+
