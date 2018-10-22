@@ -159,13 +159,16 @@ We use a cutoff of adjusted p value by 0.05.
 ```{r}
 resOrdered <- res[order(res$padj),]
 resOrdered <- as.data.frame(resOrdered)[resOrdered$padj < 0.05, ]
+resOrdered$log10pvalue <- log10(resOrdered$pvalue)
+resOrdered$log10padj <- log10(resOrdered$padj)
 write.csv(resOrdered, file = here("result/rnaseq-DE-genes.csv"))
 ```
 
 Here we generate a table showing the top 100 rows.
 
 ```{r}
-knitr::kable(resOrdered[,c("symbol", "baseMean", "log2FoldChange", "pvalue", "padj")][1:100,])
+knitr::kable(resOrdered[,c("symbol", "baseMean", "log2FoldChange", "pvalue",
+                           "log10pvalue", "padj", "log10padj")][1:100,])
 ```
 
 

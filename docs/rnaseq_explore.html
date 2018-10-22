@@ -347,9 +347,12 @@ head(res[order(res$pvalue),], n = 3)</code></pre>
 <p>We use a cutoff of adjusted p value by 0.05.</p>
 <pre class="r"><code>resOrdered &lt;- res[order(res$padj),]
 resOrdered &lt;- as.data.frame(resOrdered)[resOrdered$padj &lt; 0.05, ]
+resOrdered$log10pvalue &lt;- log10(resOrdered$pvalue)
+resOrdered$log10padj &lt;- log10(resOrdered$padj)
 write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code></pre>
 <p>Here we generate a table showing the top 100 rows.</p>
-<pre class="r"><code>knitr::kable(resOrdered[,c(&quot;symbol&quot;, &quot;baseMean&quot;, &quot;log2FoldChange&quot;, &quot;pvalue&quot;, &quot;padj&quot;)][1:100,])</code></pre>
+<pre class="r"><code>knitr::kable(resOrdered[,c(&quot;symbol&quot;, &quot;baseMean&quot;, &quot;log2FoldChange&quot;, &quot;pvalue&quot;,
+                           &quot;log10pvalue&quot;, &quot;padj&quot;, &quot;log10padj&quot;)][1:100,])</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -358,7 +361,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <th align="right">baseMean</th>
 <th align="right">log2FoldChange</th>
 <th align="right">pvalue</th>
+<th align="right">log10pvalue</th>
 <th align="right">padj</th>
+<th align="right">log10padj</th>
 </tr>
 </thead>
 <tbody>
@@ -368,7 +373,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">10887.8871</td>
 <td align="right">-4.064639</td>
 <td align="right">0</td>
+<td align="right">-305.8870</td>
 <td align="right">0</td>
+<td align="right">-301.60527</td>
 </tr>
 <tr class="even">
 <td>ENSG00000185950</td>
@@ -376,7 +383,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">7290.7156</td>
 <td align="right">3.712382</td>
 <td align="right">0</td>
+<td align="right">-280.2221</td>
 <td align="right">0</td>
+<td align="right">-276.24138</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000183054</td>
@@ -384,7 +393,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3308.4066</td>
 <td align="right">5.767468</td>
 <td align="right">0</td>
+<td align="right">-262.2101</td>
 <td align="right">0</td>
+<td align="right">-258.40550</td>
 </tr>
 <tr class="even">
 <td>ENSG00000104343</td>
@@ -392,7 +403,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">2651.4545</td>
 <td align="right">2.682886</td>
 <td align="right">0</td>
+<td align="right">-260.8018</td>
 <td align="right">0</td>
+<td align="right">-257.12213</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000139132</td>
@@ -400,7 +413,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3702.2576</td>
 <td align="right">4.321604</td>
 <td align="right">0</td>
+<td align="right">-260.1822</td>
 <td align="right">0</td>
+<td align="right">-256.59943</td>
 </tr>
 <tr class="even">
 <td>ENSG00000169926</td>
@@ -408,7 +423,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1866.4032</td>
 <td align="right">5.606474</td>
 <td align="right">0</td>
+<td align="right">-230.1944</td>
 <td align="right">0</td>
+<td align="right">-226.69079</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000115464</td>
@@ -416,7 +433,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">17364.8754</td>
 <td align="right">2.486164</td>
 <td align="right">0</td>
+<td align="right">-214.9594</td>
 <td align="right">0</td>
+<td align="right">-211.52279</td>
 </tr>
 <tr class="even">
 <td>ENSG00000198406</td>
@@ -424,7 +443,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">6818.0099</td>
 <td align="right">3.588508</td>
 <td align="right">0</td>
+<td align="right">-207.8270</td>
 <td align="right">0</td>
+<td align="right">-204.44840</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000169991</td>
@@ -432,7 +453,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3645.1309</td>
 <td align="right">-3.013131</td>
 <td align="right">0</td>
+<td align="right">-204.3299</td>
 <td align="right">0</td>
+<td align="right">-201.00240</td>
 </tr>
 <tr class="even">
 <td>ENSG00000112697</td>
@@ -440,7 +463,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">13858.6353</td>
 <td align="right">2.621514</td>
 <td align="right">0</td>
+<td align="right">-201.9769</td>
 <td align="right">0</td>
+<td align="right">-198.69515</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000164252</td>
@@ -448,7 +473,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3781.5120</td>
 <td align="right">2.572808</td>
 <td align="right">0</td>
+<td align="right">-192.3643</td>
 <td align="right">0</td>
+<td align="right">-189.12400</td>
 </tr>
 <tr class="even">
 <td>ENSG00000205213</td>
@@ -456,7 +483,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">15753.2967</td>
 <td align="right">2.286841</td>
 <td align="right">0</td>
+<td align="right">-190.6066</td>
 <td align="right">0</td>
+<td align="right">-187.40408</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000095752</td>
@@ -464,7 +493,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">2069.0860</td>
 <td align="right">-5.530731</td>
 <td align="right">0</td>
+<td align="right">-184.8300</td>
 <td align="right">0</td>
+<td align="right">-181.66225</td>
 </tr>
 <tr class="even">
 <td>ENSG00000151693</td>
@@ -472,7 +503,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">6035.2033</td>
 <td align="right">2.040470</td>
 <td align="right">0</td>
+<td align="right">-178.1985</td>
 <td align="right">0</td>
+<td align="right">-175.06287</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000105640</td>
@@ -480,7 +513,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">10268.6239</td>
 <td align="right">-3.423910</td>
 <td align="right">0</td>
+<td align="right">-174.1871</td>
 <td align="right">0</td>
+<td align="right">-171.08152</td>
 </tr>
 <tr class="even">
 <td>ENSG00000157514</td>
@@ -488,7 +523,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3530.9151</td>
 <td align="right">3.567858</td>
 <td align="right">0</td>
+<td align="right">-172.0789</td>
 <td align="right">0</td>
+<td align="right">-169.00130</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000169905</td>
@@ -496,7 +533,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">7864.1870</td>
 <td align="right">2.458975</td>
 <td align="right">0</td>
+<td align="right">-163.6027</td>
 <td align="right">0</td>
+<td align="right">-160.55146</td>
 </tr>
 <tr class="even">
 <td>ENSG00000069869</td>
@@ -504,7 +543,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">23357.6691</td>
 <td align="right">2.373807</td>
 <td align="right">0</td>
+<td align="right">-157.5795</td>
 <td align="right">0</td>
+<td align="right">-154.55308</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000135390</td>
@@ -512,7 +553,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3978.1643</td>
 <td align="right">-2.583915</td>
 <td align="right">0</td>
+<td align="right">-154.6555</td>
 <td align="right">0</td>
+<td align="right">-151.65254</td>
 </tr>
 <tr class="even">
 <td>ENSG00000162980</td>
@@ -520,7 +563,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5732.0029</td>
 <td align="right">2.960874</td>
 <td align="right">0</td>
+<td align="right">-152.9744</td>
 <td align="right">0</td>
+<td align="right">-149.99367</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000109805</td>
@@ -528,7 +573,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5259.7958</td>
 <td align="right">2.451828</td>
 <td align="right">0</td>
+<td align="right">-152.6469</td>
 <td align="right">0</td>
+<td align="right">-149.68739</td>
 </tr>
 <tr class="even">
 <td>ENSG00000198964</td>
@@ -536,7 +583,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5516.1513</td>
 <td align="right">2.490098</td>
 <td align="right">0</td>
+<td align="right">-152.0777</td>
 <td align="right">0</td>
+<td align="right">-149.13844</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000082996</td>
@@ -544,7 +593,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4250.6566</td>
 <td align="right">2.398747</td>
 <td align="right">0</td>
+<td align="right">-149.7955</td>
 <td align="right">0</td>
+<td align="right">-146.87553</td>
 </tr>
 <tr class="even">
 <td>ENSG00000280759</td>
@@ -552,7 +603,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1959.9337</td>
 <td align="right">2.483440</td>
 <td align="right">0</td>
+<td align="right">-148.0368</td>
 <td align="right">0</td>
+<td align="right">-145.13533</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000128342</td>
@@ -560,7 +613,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">2280.9282</td>
 <td align="right">-2.763205</td>
 <td align="right">0</td>
+<td align="right">-146.7179</td>
 <td align="right">0</td>
+<td align="right">-143.83410</td>
 </tr>
 <tr class="even">
 <td>ENSG00000104695</td>
@@ -568,7 +623,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">13057.4130</td>
 <td align="right">2.649907</td>
 <td align="right">0</td>
+<td align="right">-146.5856</td>
 <td align="right">0</td>
+<td align="right">-143.71885</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000198060</td>
@@ -576,7 +633,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5742.8492</td>
 <td align="right">2.775426</td>
 <td align="right">0</td>
+<td align="right">-143.4668</td>
 <td align="right">0</td>
+<td align="right">-140.61644</td>
 </tr>
 <tr class="even">
 <td>ENSG00000174231</td>
@@ -584,7 +643,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">553.2494</td>
 <td align="right">5.949763</td>
 <td align="right">0</td>
+<td align="right">-143.4071</td>
 <td align="right">0</td>
+<td align="right">-140.57254</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000138448</td>
@@ -592,7 +653,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">41142.4352</td>
 <td align="right">1.949992</td>
 <td align="right">0</td>
+<td align="right">-142.2118</td>
 <td align="right">0</td>
+<td align="right">-139.39249</td>
 </tr>
 <tr class="even">
 <td>ENSG00000107372</td>
@@ -600,7 +663,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">21828.9852</td>
 <td align="right">2.105170</td>
 <td align="right">0</td>
+<td align="right">-141.7460</td>
 <td align="right">0</td>
+<td align="right">-138.94141</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000105186</td>
@@ -608,7 +673,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4925.9801</td>
 <td align="right">2.718561</td>
 <td align="right">0</td>
+<td align="right">-140.7539</td>
 <td align="right">0</td>
+<td align="right">-137.96355</td>
 </tr>
 <tr class="even">
 <td>ENSG00000126773</td>
@@ -616,7 +683,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3906.1420</td>
 <td align="right">1.778355</td>
 <td align="right">0</td>
+<td align="right">-140.5251</td>
 <td align="right">0</td>
+<td align="right">-137.74857</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000174738</td>
@@ -624,7 +693,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4559.5019</td>
 <td align="right">2.863783</td>
 <td align="right">0</td>
+<td align="right">-139.3046</td>
 <td align="right">0</td>
+<td align="right">-136.54139</td>
 </tr>
 <tr class="even">
 <td>ENSG00000062650</td>
@@ -632,7 +703,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3916.2182</td>
 <td align="right">1.941971</td>
 <td align="right">0</td>
+<td align="right">-139.1457</td>
 <td align="right">0</td>
+<td align="right">-136.39549</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000102309</td>
@@ -640,7 +713,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1082.1887</td>
 <td align="right">-3.364524</td>
 <td align="right">0</td>
+<td align="right">-139.0367</td>
 <td align="right">0</td>
+<td align="right">-136.29906</td>
 </tr>
 <tr class="even">
 <td>ENSG00000108424</td>
@@ -648,7 +723,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">46025.2744</td>
 <td align="right">2.059849</td>
 <td align="right">0</td>
+<td align="right">-138.5036</td>
 <td align="right">0</td>
+<td align="right">-135.77819</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000155850</td>
@@ -656,7 +733,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">24351.1755</td>
 <td align="right">2.701976</td>
 <td align="right">0</td>
+<td align="right">-137.9327</td>
 <td align="right">0</td>
+<td align="right">-135.21923</td>
 </tr>
 <tr class="even">
 <td>ENSG00000132294</td>
@@ -664,7 +743,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">9226.3675</td>
 <td align="right">2.181633</td>
 <td align="right">0</td>
+<td align="right">-137.5685</td>
 <td align="right">0</td>
+<td align="right">-134.86657</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000120451</td>
@@ -672,7 +753,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5771.2761</td>
 <td align="right">3.478311</td>
 <td align="right">0</td>
+<td align="right">-137.4720</td>
 <td align="right">0</td>
+<td align="right">-134.78131</td>
 </tr>
 <tr class="even">
 <td>ENSG00000153207</td>
@@ -680,7 +763,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4147.0884</td>
 <td align="right">2.774821</td>
 <td align="right">0</td>
+<td align="right">-137.2353</td>
 <td align="right">0</td>
+<td align="right">-134.55561</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000053770</td>
@@ -688,7 +773,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3152.0765</td>
 <td align="right">1.951206</td>
 <td align="right">0</td>
+<td align="right">-136.5905</td>
 <td align="right">0</td>
+<td align="right">-133.92156</td>
 </tr>
 <tr class="even">
 <td>ENSG00000115760</td>
@@ -696,7 +783,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">9424.7527</td>
 <td align="right">3.119801</td>
 <td align="right">0</td>
+<td align="right">-135.9059</td>
 <td align="right">0</td>
+<td align="right">-133.24745</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000135968</td>
@@ -704,7 +793,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4173.6160</td>
 <td align="right">1.994533</td>
 <td align="right">0</td>
+<td align="right">-134.8412</td>
 <td align="right">0</td>
+<td align="right">-132.19297</td>
 </tr>
 <tr class="even">
 <td>ENSG00000198839</td>
@@ -712,7 +803,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1767.2793</td>
 <td align="right">2.399365</td>
 <td align="right">0</td>
+<td align="right">-134.2761</td>
 <td align="right">0</td>
+<td align="right">-131.63782</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000132849</td>
@@ -720,7 +813,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1473.7419</td>
 <td align="right">2.307424</td>
 <td align="right">0</td>
+<td align="right">-134.1951</td>
 <td align="right">0</td>
+<td align="right">-131.56658</td>
 </tr>
 <tr class="even">
 <td>ENSG00000096746</td>
@@ -728,7 +823,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">9703.3119</td>
 <td align="right">-1.936980</td>
 <td align="right">0</td>
+<td align="right">-133.1351</td>
 <td align="right">0</td>
+<td align="right">-130.51612</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000171634</td>
@@ -736,7 +833,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">9114.1276</td>
 <td align="right">2.379349</td>
 <td align="right">0</td>
+<td align="right">-133.0108</td>
 <td align="right">0</td>
+<td align="right">-130.40115</td>
 </tr>
 <tr class="even">
 <td>ENSG00000115159</td>
@@ -744,7 +843,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">7357.9916</td>
 <td align="right">2.453603</td>
 <td align="right">0</td>
+<td align="right">-132.8356</td>
 <td align="right">0</td>
+<td align="right">-130.23516</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000163659</td>
@@ -752,7 +853,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5901.2881</td>
 <td align="right">3.438473</td>
 <td align="right">0</td>
+<td align="right">-130.4587</td>
 <td align="right">0</td>
+<td align="right">-127.86714</td>
 </tr>
 <tr class="even">
 <td>ENSG00000104067</td>
@@ -760,7 +863,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">9813.8213</td>
 <td align="right">2.550050</td>
 <td align="right">0</td>
+<td align="right">-129.8782</td>
 <td align="right">0</td>
+<td align="right">-127.29546</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000100142</td>
@@ -768,7 +873,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1133.7068</td>
 <td align="right">-2.773126</td>
 <td align="right">0</td>
+<td align="right">-129.5680</td>
 <td align="right">0</td>
+<td align="right">-126.99389</td>
 </tr>
 <tr class="even">
 <td>ENSG00000167131</td>
@@ -776,7 +883,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">434.1273</td>
 <td align="right">-3.374421</td>
 <td align="right">0</td>
+<td align="right">-129.3770</td>
 <td align="right">0</td>
+<td align="right">-126.81126</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000130513</td>
@@ -784,7 +893,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">696.1152</td>
 <td align="right">-4.714202</td>
 <td align="right">0</td>
+<td align="right">-128.2151</td>
 <td align="right">0</td>
+<td align="right">-125.65764</td>
 </tr>
 <tr class="even">
 <td>ENSG00000066557</td>
@@ -792,7 +903,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">2248.9189</td>
 <td align="right">2.234040</td>
 <td align="right">0</td>
+<td align="right">-127.9543</td>
 <td align="right">0</td>
+<td align="right">-125.40496</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000169689</td>
@@ -800,7 +913,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1552.9846</td>
 <td align="right">-2.641355</td>
 <td align="right">0</td>
+<td align="right">-127.7905</td>
 <td align="right">0</td>
+<td align="right">-125.24914</td>
 </tr>
 <tr class="even">
 <td>ENSG00000160201</td>
@@ -808,7 +923,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">2610.6607</td>
 <td align="right">-5.153143</td>
 <td align="right">0</td>
+<td align="right">-127.6355</td>
 <td align="right">0</td>
+<td align="right">-125.10194</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000117906</td>
@@ -816,7 +933,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">10500.3311</td>
 <td align="right">2.257670</td>
 <td align="right">0</td>
+<td align="right">-127.6169</td>
 <td align="right">0</td>
+<td align="right">-125.09108</td>
 </tr>
 <tr class="even">
 <td>ENSG00000145912</td>
@@ -824,7 +943,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3671.0196</td>
 <td align="right">-3.146431</td>
 <td align="right">0</td>
+<td align="right">-127.0682</td>
 <td align="right">0</td>
+<td align="right">-124.54987</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000125971</td>
@@ -832,7 +953,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1537.3093</td>
 <td align="right">-2.208325</td>
 <td align="right">0</td>
+<td align="right">-125.0147</td>
 <td align="right">0</td>
+<td align="right">-122.50385</td>
 </tr>
 <tr class="even">
 <td>ENSG00000173486</td>
@@ -840,7 +963,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1021.7478</td>
 <td align="right">-2.825592</td>
 <td align="right">0</td>
+<td align="right">-124.8276</td>
 <td align="right">0</td>
+<td align="right">-122.32403</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000132510</td>
@@ -848,7 +973,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">727.1086</td>
 <td align="right">-2.868732</td>
 <td align="right">0</td>
+<td align="right">-123.1765</td>
 <td align="right">0</td>
+<td align="right">-120.68013</td>
 </tr>
 <tr class="even">
 <td>ENSG00000249072</td>
@@ -856,7 +983,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">27691.9981</td>
 <td align="right">4.541639</td>
 <td align="right">0</td>
+<td align="right">-122.3500</td>
 <td align="right">0</td>
+<td align="right">-119.86069</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000277101</td>
@@ -864,7 +993,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1098.1216</td>
 <td align="right">2.608272</td>
 <td align="right">0</td>
+<td align="right">-122.0229</td>
 <td align="right">0</td>
+<td align="right">-119.54055</td>
 </tr>
 <tr class="even">
 <td>ENSG00000115112</td>
@@ -872,7 +1003,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5053.2805</td>
 <td align="right">5.008932</td>
 <td align="right">0</td>
+<td align="right">-121.9768</td>
 <td align="right">0</td>
+<td align="right">-119.50128</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000079332</td>
@@ -880,7 +1013,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">7295.7534</td>
 <td align="right">2.044449</td>
 <td align="right">0</td>
+<td align="right">-120.8097</td>
 <td align="right">0</td>
+<td align="right">-118.34092</td>
 </tr>
 <tr class="even">
 <td>ENSG00000075624</td>
@@ -888,7 +1023,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">20865.5056</td>
 <td align="right">-4.669003</td>
 <td align="right">0</td>
+<td align="right">-120.5116</td>
 <td align="right">0</td>
+<td align="right">-118.04942</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000112701</td>
@@ -896,7 +1033,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4517.5870</td>
 <td align="right">2.037316</td>
 <td align="right">0</td>
+<td align="right">-116.6622</td>
 <td align="right">0</td>
+<td align="right">-114.20661</td>
 </tr>
 <tr class="even">
 <td>ENSG00000196419</td>
@@ -904,7 +1043,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">16845.1131</td>
 <td align="right">-2.291228</td>
 <td align="right">0</td>
+<td align="right">-116.3593</td>
 <td align="right">0</td>
+<td align="right">-113.91009</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000126778</td>
@@ -912,7 +1053,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">301.3869</td>
 <td align="right">5.049550</td>
 <td align="right">0</td>
+<td align="right">-116.0353</td>
 <td align="right">0</td>
+<td align="right">-113.59247</td>
 </tr>
 <tr class="even">
 <td>ENSG00000135932</td>
@@ -920,7 +1063,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5710.7156</td>
 <td align="right">1.967472</td>
 <td align="right">0</td>
+<td align="right">-115.4383</td>
 <td align="right">0</td>
+<td align="right">-113.00165</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000123505</td>
@@ -928,7 +1073,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">19265.0265</td>
 <td align="right">2.185447</td>
 <td align="right">0</td>
+<td align="right">-114.5354</td>
 <td align="right">0</td>
+<td align="right">-112.10499</td>
 </tr>
 <tr class="even">
 <td>ENSG00000134371</td>
@@ -936,7 +1083,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3338.6645</td>
 <td align="right">4.718001</td>
 <td align="right">0</td>
+<td align="right">-114.3072</td>
 <td align="right">0</td>
+<td align="right">-111.88284</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000138771</td>
@@ -944,7 +1093,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1763.1552</td>
 <td align="right">2.857985</td>
 <td align="right">0</td>
+<td align="right">-112.3992</td>
 <td align="right">0</td>
+<td align="right">-109.98081</td>
 </tr>
 <tr class="even">
 <td>ENSG00000150907</td>
@@ -952,7 +1103,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1041.2224</td>
 <td align="right">2.465024</td>
 <td align="right">0</td>
+<td align="right">-112.2884</td>
 <td align="right">0</td>
+<td align="right">-109.87593</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000241468</td>
@@ -960,7 +1113,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3250.0801</td>
 <td align="right">-3.026388</td>
 <td align="right">0</td>
+<td align="right">-112.2476</td>
 <td align="right">0</td>
+<td align="right">-109.84099</td>
 </tr>
 <tr class="even">
 <td>ENSG00000159579</td>
@@ -968,7 +1123,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4527.5991</td>
 <td align="right">2.080586</td>
 <td align="right">0</td>
+<td align="right">-111.6511</td>
 <td align="right">0</td>
+<td align="right">-109.25024</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000168497</td>
@@ -976,7 +1133,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3634.7480</td>
 <td align="right">2.794738</td>
 <td align="right">0</td>
+<td align="right">-111.5985</td>
 <td align="right">0</td>
+<td align="right">-109.20332</td>
 </tr>
 <tr class="even">
 <td>ENSG00000023839</td>
@@ -984,7 +1143,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3891.8436</td>
 <td align="right">3.939480</td>
 <td align="right">0</td>
+<td align="right">-111.3246</td>
 <td align="right">0</td>
+<td align="right">-108.93497</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000142188</td>
@@ -992,7 +1153,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1623.4726</td>
 <td align="right">2.780489</td>
 <td align="right">0</td>
+<td align="right">-111.0776</td>
 <td align="right">0</td>
+<td align="right">-108.69353</td>
 </tr>
 <tr class="even">
 <td>ENSG00000111696</td>
@@ -1000,7 +1163,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4020.3129</td>
 <td align="right">2.612858</td>
 <td align="right">0</td>
+<td align="right">-111.0374</td>
 <td align="right">0</td>
+<td align="right">-108.65879</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000143384</td>
@@ -1008,7 +1173,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">21868.4203</td>
 <td align="right">2.276826</td>
 <td align="right">0</td>
+<td align="right">-110.2114</td>
 <td align="right">0</td>
+<td align="right">-107.83813</td>
 </tr>
 <tr class="even">
 <td>ENSG00000248643</td>
@@ -1016,7 +1183,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">354.2526</td>
 <td align="right">-4.345695</td>
 <td align="right">0</td>
+<td align="right">-109.1227</td>
 <td align="right">0</td>
+<td align="right">-106.75475</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000272869</td>
@@ -1024,7 +1193,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">713.0474</td>
 <td align="right">-4.266895</td>
 <td align="right">0</td>
+<td align="right">-108.9660</td>
 <td align="right">0</td>
+<td align="right">-106.60339</td>
 </tr>
 <tr class="even">
 <td>ENSG00000176393</td>
@@ -1032,7 +1203,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">7583.2691</td>
 <td align="right">2.827283</td>
 <td align="right">0</td>
+<td align="right">-108.4009</td>
 <td align="right">0</td>
+<td align="right">-106.04348</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000102531</td>
@@ -1040,7 +1213,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4715.8965</td>
 <td align="right">1.590473</td>
 <td align="right">0</td>
+<td align="right">-107.4754</td>
 <td align="right">0</td>
+<td align="right">-105.12313</td>
 </tr>
 <tr class="even">
 <td>ENSG00000133983</td>
@@ -1048,7 +1223,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">4894.3503</td>
 <td align="right">3.011163</td>
 <td align="right">0</td>
+<td align="right">-107.3858</td>
 <td align="right">0</td>
+<td align="right">-105.03858</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000270757</td>
@@ -1056,7 +1233,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1256.6586</td>
 <td align="right">2.855548</td>
 <td align="right">0</td>
+<td align="right">-106.9472</td>
 <td align="right">0</td>
+<td align="right">-104.60498</td>
 </tr>
 <tr class="even">
 <td>ENSG00000115268</td>
@@ -1064,7 +1243,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5365.9039</td>
 <td align="right">-2.828864</td>
 <td align="right">0</td>
+<td align="right">-106.7437</td>
 <td align="right">0</td>
+<td align="right">-104.40642</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000174886</td>
@@ -1072,7 +1253,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1011.9536</td>
 <td align="right">-2.416126</td>
 <td align="right">0</td>
+<td align="right">-105.7360</td>
 <td align="right">0</td>
+<td align="right">-103.40367</td>
 </tr>
 <tr class="even">
 <td>ENSG00000169020</td>
@@ -1080,7 +1263,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1345.8550</td>
 <td align="right">-4.018082</td>
 <td align="right">0</td>
+<td align="right">-104.8591</td>
 <td align="right">0</td>
+<td align="right">-102.53166</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000099977</td>
@@ -1088,7 +1273,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">1077.4595</td>
 <td align="right">-2.585381</td>
 <td align="right">0</td>
+<td align="right">-104.8358</td>
 <td align="right">0</td>
+<td align="right">-102.51311</td>
 </tr>
 <tr class="even">
 <td>ENSG00000087074</td>
@@ -1096,7 +1283,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">789.4097</td>
 <td align="right">-2.461047</td>
 <td align="right">0</td>
+<td align="right">-104.4598</td>
 <td align="right">0</td>
+<td align="right">-102.14185</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000227715</td>
@@ -1104,7 +1293,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">477.0081</td>
 <td align="right">3.134361</td>
 <td align="right">0</td>
+<td align="right">-104.3496</td>
 <td align="right">0</td>
+<td align="right">-102.03634</td>
 </tr>
 <tr class="even">
 <td>ENSG00000108691</td>
@@ -1112,7 +1303,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">988.4682</td>
 <td align="right">-2.954339</td>
 <td align="right">0</td>
+<td align="right">-103.8372</td>
 <td align="right">0</td>
+<td align="right">-101.52866</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000162599</td>
@@ -1120,7 +1313,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3003.3625</td>
 <td align="right">2.577884</td>
 <td align="right">0</td>
+<td align="right">-103.0296</td>
 <td align="right">0</td>
+<td align="right">-100.72562</td>
 </tr>
 <tr class="even">
 <td>ENSG00000122376</td>
@@ -1128,7 +1323,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">5726.1700</td>
 <td align="right">2.126525</td>
 <td align="right">0</td>
+<td align="right">-102.7868</td>
 <td align="right">0</td>
+<td align="right">-100.48735</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000197102</td>
@@ -1136,7 +1333,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3043.1864</td>
 <td align="right">3.758437</td>
 <td align="right">0</td>
+<td align="right">-102.7736</td>
 <td align="right">0</td>
+<td align="right">-100.47863</td>
 </tr>
 <tr class="even">
 <td>ENSG00000136521</td>
@@ -1144,7 +1343,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">3426.6347</td>
 <td align="right">2.476269</td>
 <td align="right">0</td>
+<td align="right">-102.1074</td>
 <td align="right">0</td>
+<td align="right">-99.81691</td>
 </tr>
 <tr class="odd">
 <td>ENSG00000160062</td>
@@ -1152,7 +1353,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">879.7523</td>
 <td align="right">2.150053</td>
 <td align="right">0</td>
+<td align="right">-100.9829</td>
 <td align="right">0</td>
+<td align="right">-98.69678</td>
 </tr>
 <tr class="even">
 <td>ENSG00000091409</td>
@@ -1160,7 +1363,9 @@ write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code
 <td align="right">6660.8516</td>
 <td align="right">2.348076</td>
 <td align="right">0</td>
+<td align="right">-100.0551</td>
 <td align="right">0</td>
+<td align="right">-97.77341</td>
 </tr>
 </tbody>
 </table>
