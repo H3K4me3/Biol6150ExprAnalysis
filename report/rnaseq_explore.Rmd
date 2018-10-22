@@ -1,0 +1,173 @@
+---
+title: "RNA-seq Data Analysis"
+author: "Jialin Ma"
+date: "October 22, 2018"
+output:
+  html_document:
+    self_contained: false
+    toc: true
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = FALSE)
+```
+
+## Load the packages
+
+```{r}
+suppressPackageStartupMessages({
+    library(here)
+    library(dplyr)
+    library(ggplot2)
+    library(pheatmap)
+    library(RColorBrewer)
+    library(EnsDb.Hsapiens.v86)
+    library(DESeq2)
+})
+```
+
+## Load the dataset
+
+The transcript quantification results have been produced by `salmon`.
+The `tximport` package can import and summarize the information on gene level.
+
+```{r}
+library(tximport)
+tx2gene <- transcripts(EnsDb.Hsapiens.v86,
+        return.type = "data.frame", columns = c("tx_id", "gene_id"))
+salmon_dirs <- list.files(here("result/salmon_quant"), full.names = TRUE)
+salmon_files <- sapply(salmon_dirs, function(x) file.path(x, "quant.sf"))
+names(salmon_files) <- basename(salmon_dirs)
+txi <- tximport(salmon_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE)
+names(txi)
+```
+
+We will use `DESeq2` for further analysis.
+Convert the data to DESeqDataSet class.
+
+```{r}
+samples <- data.frame(condition = c(rep.int("control", 3), rep.int("treat", 4)),
+                      sample_name = names(salmon_files))
+rownames(samples) <- names(salmon_files)
+samples
+dds <- DESeqDataSetFromTximport(txi, colData = samples, design = ~ condition)
+dds
+```
+
+Remove the empty rows.
+
+```{r}
+nrow(dds)
+dds <- dds[ rowSums(counts(dds)) > 0, ]
+nrow(dds)
+```
+
+
+
+## Regularized-logarithm transformation (rlog)
+
+We will use the regularized log transformation for PCA plot and SD-mean plot.
+It will reduce the variation on lowly expressed genes.
+
+```{r}
+rld <- rlog(dds, blind = FALSE)
+head(assay(rld), 3)
+```
+
+## Heatmap showing sample distance (rlog transformed)
+
+The samples can be clearly clustered by the control/treat condition.
+
+```{r}
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix( sampleDists )
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows = sampleDists,
+         clustering_distance_cols = sampleDists,
+         col = colors)
+```
+
+## PCA plot (rlog transformed)
+
+```{r}
+plotPCA(rld)
+```
+
+## Differential expression analysis
+
+Run the differential expression pipeline.
+
+```{r}
+dds <- DESeq(dds)
+```
+
+Then build the results table, we use an adjusted p-value cutoff by 0.05.
+
+```{r}
+res <- results(dds, alpha = 0.05)
+head(res[order(res$pvalue), ], n = 3)
+mcols(res, use.names = TRUE)
+```
+
+```{r}
+summary(res)
+```
+
+
+```{r eval=FALSE, include=FALSE}
+## Log fold change shrinkage for visualization and ranking
+resLFC <- lfcShrink(dds, coef="condition_treat_vs_control", type="apeglm")
+resLFC
+```
+
+## MA plot
+
+Points are be colored red if the adjusted p value is less than 0.05.
+
+```{r}
+plotMA(res)
+```
+
+## Distribution of p values
+
+```{r}
+hist(res$pvalue[res$baseMean > 1], breaks = 0:20/20,
+     col = "grey50", border = "white")
+```
+
+
+## Annotating the gene names
+
+```{r}
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+res$symbol <- mapIds(org.Hs.eg.db, keys=row.names(res),
+    column="SYMBOL", keytype="ENSEMBL", multiVals="first")
+res <- res[, c(ncol(res), 1:(ncol(res)))]
+head(res[order(res$pvalue),], n = 3)
+```
+
+## Generate a table of differentially expressed genes
+
+We use a cutoff of adjusted p value by 0.05.
+
+```{r}
+resOrdered <- res[order(res$padj),]
+resOrdered <- as.data.frame(resOrdered)[resOrdered$padj < 0.05, ]
+write.csv(resOrdered, file = here("result/rnaseq-DE-genes.csv"))
+```
+
+Here we generate a table showing the top 100 rows.
+
+```{r}
+knitr::kable(resOrdered[,c("symbol", "baseMean", "log2FoldChange", "pvalue", "padj")][1:100,])
+```
+
+
+
+

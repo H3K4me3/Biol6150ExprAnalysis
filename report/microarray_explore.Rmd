@@ -5,6 +5,7 @@ date: "October 17, 2018"
 output:
   html_document:
     self_contained: false
+    toc: true
   pdf_document: default
 editor_options:
   chunk_output_type: console
