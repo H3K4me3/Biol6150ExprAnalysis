@@ -80,6 +80,10 @@ Run the script to do transccript quantification for the samples.
 The results of the quantification have been added to the repository within the
 branch `with_quant_result`.
 
+## Analysis of the microarray data
+
+Checkout this [link](https://h3k4me3.github.io/code6150/microarray_explore.html).
+
 
 ## Reference
 
