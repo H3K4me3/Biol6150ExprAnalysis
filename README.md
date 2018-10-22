@@ -85,3 +85,5 @@ branch `with_quant_result`.
 
 - [New RNA-seq workflows](https://www.bioconductor.org/help/course-materials/2016/CSAMA/lect-07-modern-rnaseq/ModernRNAseqAnalysis.pdf)
 
+- [An end to end workflow for differential gene expression using Affymetrix microarrays](https://f1000research.com/articles/5-1384/v1)
+

@@ -2,8 +2,10 @@
 title: "Microarray Data Analysis"
 author: "Jialin Ma"
 date: "October 17, 2018"
-output: html_document
-editor_options: 
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
   chunk_output_type: console
 ---
 
@@ -27,6 +29,7 @@ suppressPackageStartupMessages({
 dataset <- read.celfiles(list.files(here("data/microarray"), full.names = TRUE))
 dataset <- dataset[, c(paste0(c("GSM651310", "GSM651320", "GSM651315", "GSM651325"), ".CEL.gz"))]
 sampleNames(dataset) <- c("control_rep1", "control_rep2", "treat_rep1", "treat_rep2")
+pData(dataset)$group <- c("control", "control", "treat", "treat")
 dataset
 ```
 
@@ -35,8 +38,9 @@ dataset
 ### Boxplot
 
 ```{r}
-boxplot(dataset)
+boxplot(dataset, target = "core")
 ```
+
 
 ### MA plot
 
@@ -44,20 +48,59 @@ boxplot(dataset)
 oligo::MAplot(dataset, pairs = TRUE, ylim = c(-1, 1))
 ```
 
-### Quality Measures
 
-```{r eval=FALSE, include=FALSE}
-simpleaffy::qc
+### Quality report of the raw data
+
+The following will generate a quality report of the raw microarray data in 
+`docs/microarray_qualitymetrics` directory.
+
+```r
+library(arrayQualityMetrics)
+arrayQualityMetrics(expressionset = dataset,
+    outdir = "docs/microarray_qualitymetrics",
+    force = TRUE, do.logtransform = TRUE,
+    intgroup = c("group"))
 ```
 
 ## RMA
 
-The rma method proceeds with background subtraction, normalization and summarization
-using median-polish.
+The RMA method proceeds with background subtraction, normalization and summarization
+using a deconvolution method for background correction, quantile normalization and
+the RMA (robust multichip average) algorithm for summarization.
 
 ```{r}
 edata <- oligo::rma(dataset)
 edata
+```
+
+## Access the quality after normalization
+
+### PCA plot before and after normalization
+
+```{r}
+library(ggplot2)
+library(cowplot)
+plot_grid(
+    local({
+        PCA_raw <- prcomp(t(log2(exprs(dataset))), scale = FALSE)
+    
+        dataGG <- data.frame(PC1 = PCA_raw$x[,1], PC2 = PCA_raw$x[,2],
+                         Group = pData(dataset)$group)
+    		
+        qplot(PC1, PC2, data = dataGG, color = Group,
+              main = "PCA plot of the raw data (log-transformed)", asp = 1.0, geom = "text",
+    	label = sampleNames(dataset)) + scale_colour_brewer(palette = "Set2")
+    }),
+    local({
+        PCA <- prcomp(t(exprs(edata)), scale = FALSE)
+        dataGG <- data.frame(PC1 = PCA$x[,1], PC2 = PCA$x[,2],
+                  Group = pData(dataset)$group)
+        qplot(PC1, PC2, data = dataGG, color =  Group,
+            main = "PCA plot of the normalized data", asp = 1.0, geom = "text",
+            label = sampleNames(edata)) +
+            scale_colour_brewer(palette = "Set2")
+    })
+)
 ```
 
 ### Boxplot before and after normalization
@@ -75,7 +118,53 @@ par(mfrow = c(1,1))
 oligo::MAplot(edata, pairs = TRUE, ylim = c(-1, 1))
 ```
 
+### Heatmap with sample-to-sample distance after normalization
+
+It can not provide too much information for us since the number of samples is limited.
+
+```{r}
+library(RColorBrewer)
+library(pheatmap)
+dists <- as.matrix(dist(t(exprs(edata)), method = "manhattan"))
+diag(dists) <- NA
+hmcol <- colorRampPalette(rev(brewer.pal(9, "PuOr")))(255)
+pheatmap(dists, col = rev(hmcol), clustering_distance_rows = "manhattan",
+				    clustering_distance_cols = "manhattan")
+```
+
+## Filter based on intensity
+
+Microarray data commonly show a large number of probes in the background
+intensity range. They also do not change much across arrays. Hence they
+combine a low variance with a low intensity. We want to filter these results
+as they may contribute to false positive results in the differential expression
+analysis.
+
+```{r}
+edata_medians <- rowMedians(exprs(edata))
+hist_res <- hist(edata_medians, 100, col="#e7efd8", freq = FALSE,
+                 main = "Histogram of the median intensities",
+                 xlab = "Median intensities")
+emp_mu <- hist_res$breaks[which.max(hist_res$density)]
+emp_sd <- mad(edata_medians)/2
+prop_cental <- 0.50
+lines(sort(edata_medians),
+      prop_cental*dnorm(sort(edata_medians), mean = emp_mu, sd = emp_sd),
+    col = "grey10", lwd = 4)
+
+cut_val <- 0.05 / prop_cental
+thresh_median <- qnorm(0.05 / prop_cental, emp_mu, emp_sd)
+samples_cutoff <- 2
+idx_thresh_median <- apply(exprs(edata), 1, function(x){
+				   sum(x > thresh_median) >= samples_cutoff})
+table(idx_thresh_median)
+edata <- subset(edata, idx_thresh_median)
+```
+
+
 ## Identification of differentially expressed genes
+
+Create a simple design matrix.
 
 ```{r}
 library(limma)
@@ -86,58 +175,112 @@ colnames(design) <- c("control", "treat")
 design
 ```
 
+We can fit the linear model, define appropriate contrast to test the hypothesis on
+treatment effect and compute the moderated t–statistics by calling
+the `eBayes` function.
+
 ```{r}
 data.fit <- lmFit(exprs(edata), design)
 head(data.fit$coefficients)
-```
-
-```{r}
 contrast.matrix <- makeContrasts(treat-control,levels=design)
 data.fit.con <- contrasts.fit(data.fit,contrast.matrix)
-```
-
-Perform the moderated t-test
-
-```{r}
 data.fit.eb <- eBayes(data.fit.con)
-names(data.fit.eb)
-head(data.fit.eb$coefficients)
-head(data.fit.eb$t)
-head(data.fit.eb$p.value)
 ```
 
-### Volcano plot
+Volcano plot to show the distribution of fold change and p value.
 
 ```{r}
 volcanoplot(data.fit.eb,highlight=10)
 ```
 
-### Adjust p value for multiple testing and select DE genes
+Then we sort the results by their absolute t-statistics.
 
 ```{r}
-top <- topTable(data.fit.eb,number=200,adjust.method="BH")
+top <- topTable(data.fit.eb, number = Inf)
 head(top)
-tail(top)
 ```
 
-Should we use adjusted p value to select the genes?
+Check how many results can we get if we use a p value cutoff by
+0.001 or an adjusted p value cutoff by 0.05.
 
-## Annotating Genes
+```{r}
+table(top$adj.P.Val < 0.05)
+table(top$P.Value < 0.001)
+```
+
+We notice that the number of differential expressed genes are limited, which indicates the
+the effect of 4 hour DEX treatment may not be significant in altering the gene expression.
+
+Then plot a histogram of p value distribution.
+
+```{r}
+hist(top$P.Value, col = brewer.pal(3, name = "Set2")[1],
+      main = "Control vs Treatment of DEX by 4 hours", xlab = "p-values")
+```
+
+We zoom in the plot to see p value distribution between 0 and 0.1.
+
+```{r}
+hist(top$P.Value[top$P.Value < 0.1], col = brewer.pal(3, name = "Set2")[1],
+      main = "Control vs Treatment of DEX by 4 hours", xlab = "p-values")
+```
+
+Zoom in again and the orange bin indicates the differentially expressed genes
+if we use a p value cutoff by 0.001.
+
+```{r}
+local({
+    breaks <- 0:10/1000
+    color1 <- brewer.pal(3, name = "Set2")[1]
+    color2 <- brewer.pal(3, name = "Set2")[2]
+    color <- rep.int(color1, length(breaks) - 1)
+    color[1] <- color2
+    data <- top$P.Value[top$P.Value < 0.01]
+    hist(data, col = color,
+         main = "Control vs Treatment of DEX by 4 hours", xlab = "p-values", breaks = breaks)
+})
+```
+
+
+## Annotating genes
+
+We need to annotate the gene names by the probe IDs.
 
 ```{r}
 suppressPackageStartupMessages({
     library(hgu95av2.db)
 })
-getgene <- function(probeid) {
+get_symbol <- function(probeid) {
     ans <- mapIds(hgu95av2.db::hgu95av2.db,
                   keys = probeid, keytype = "PROBEID", column = "SYMBOL", multiVals = "first")
     unname(ans)
 }
-genes <- getgene(rownames(top))
-top$GeneName <- genes
-top <- top[,c("P.Value", "adj.P.Val", "GeneName")]
-head(top, n = 30)
+get_genename <- function(probeid) {
+    ans <- mapIds(hgu95av2.db::hgu95av2.db,
+                  keys = probeid, keytype = "PROBEID", column = "GENENAME", multiVals = "first")
+    unname(ans)
+}
+top$symbol <- get_symbol(rownames(top))
+top$gene_name <- get_genename(rownames(top))
 ```
+
+## Generate a table of differentially expressed genes
+
+We use a p value cutoff by 0.001.
+
+```{r}
+top <- top[, c("symbol", "gene_name", "logFC", "P.Value", "adj.P.Val")]
+top <- cbind(data.frame(probeID = rownames(top), stringsAsFactors = FALSE), top)
+rownames(top) <- NULL
+top <- top[top$P.Value < 0.001,]
+knitr::kable(top)
+```
+
+
+
+
+
+
 
 
 
