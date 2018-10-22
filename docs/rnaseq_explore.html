@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jialin Ma" />
+
+<meta name="date" content="2018-10-22" />
+
+<title>RNA-seq Data Analysis</title>
+
+<script src="rnaseq_explore_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="rnaseq_explore_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="rnaseq_explore_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="rnaseq_explore_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="rnaseq_explore_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="rnaseq_explore_files/navigation-1.1/tabsets.js"></script>
+<link href="rnaseq_explore_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="rnaseq_explore_files/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">RNA-seq Data Analysis</h1>
+<h4 class="author"><em>Jialin Ma</em></h4>
+<h4 class="date"><em>October 22, 2018</em></h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#load-the-packages">Load the packages</a></li>
+<li><a href="#load-the-dataset">Load the dataset</a></li>
+<li><a href="#regularized-logarithm-transformation-rlog">Regularized-logarithm transformation (rlog)</a></li>
+<li><a href="#heatmap-showing-sample-distance-rlog-transformed">Heatmap showing sample distance (rlog transformed)</a></li>
+<li><a href="#pca-plot-rlog-transformed">PCA plot (rlog transformed)</a></li>
+<li><a href="#differential-expression-analysis">Differential expression analysis</a></li>
+<li><a href="#ma-plot">MA plot</a></li>
+<li><a href="#distribution-of-p-values">Distribution of p values</a></li>
+<li><a href="#annotating-the-gene-names">Annotating the gene names</a></li>
+<li><a href="#generate-a-table-of-differentially-expressed-genes">Generate a table of differentially expressed genes</a></li>
+</ul>
+</div>
+
+<div id="load-the-packages" class="section level2">
+<h2>Load the packages</h2>
+<pre class="r"><code>suppressPackageStartupMessages({
+    library(here)
+    library(dplyr)
+    library(ggplot2)
+    library(pheatmap)
+    library(RColorBrewer)
+    library(EnsDb.Hsapiens.v86)
+    library(DESeq2)
+})</code></pre>
+</div>
+<div id="load-the-dataset" class="section level2">
+<h2>Load the dataset</h2>
+<p>The transcript quantification results have been produced by <code>salmon</code>. The <code>tximport</code> package can import and summarize the information on gene level.</p>
+<pre class="r"><code>library(tximport)
+tx2gene &lt;- transcripts(EnsDb.Hsapiens.v86,
+        return.type = &quot;data.frame&quot;, columns = c(&quot;tx_id&quot;, &quot;gene_id&quot;))
+salmon_dirs &lt;- list.files(here(&quot;result/salmon_quant&quot;), full.names = TRUE)
+salmon_files &lt;- sapply(salmon_dirs, function(x) file.path(x, &quot;quant.sf&quot;))
+names(salmon_files) &lt;- basename(salmon_dirs)
+txi &lt;- tximport(salmon_files, type = &quot;salmon&quot;, tx2gene = tx2gene, ignoreTxVersion = TRUE)</code></pre>
+<pre><code>## reading in files with read_tsv</code></pre>
+<pre><code>## 1 2 3 4 5 6 7 
+## transcripts missing from tx2gene: 7499
+## summarizing abundance
+## summarizing counts
+## summarizing length</code></pre>
+<pre class="r"><code>names(txi)</code></pre>
+<pre><code>## [1] &quot;abundance&quot;           &quot;counts&quot;              &quot;length&quot;             
+## [4] &quot;countsFromAbundance&quot;</code></pre>
+<p>We will use <code>DESeq2</code> for further analysis. Convert the data to DESeqDataSet class.</p>
+<pre class="r"><code>samples &lt;- data.frame(condition = c(rep.int(&quot;control&quot;, 3), rep.int(&quot;treat&quot;, 4)),
+                      sample_name = names(salmon_files))
+rownames(samples) &lt;- names(salmon_files)
+samples</code></pre>
+<pre><code>##              condition  sample_name
+## control_rep1   control control_rep1
+## control_rep2   control control_rep2
+## control_rep3   control control_rep3
+## treat_rep1       treat   treat_rep1
+## treat_rep2       treat   treat_rep2
+## treat_rep3       treat   treat_rep3
+## treat_rep4       treat   treat_rep4</code></pre>
+<pre class="r"><code>dds &lt;- DESeqDataSetFromTximport(txi, colData = samples, design = ~ condition)</code></pre>
+<pre><code>## using counts and average transcript lengths from tximport</code></pre>
+<pre class="r"><code>dds</code></pre>
+<pre><code>## class: DESeqDataSet 
+## dim: 37361 7 
+## metadata(1): version
+## assays(2): counts avgTxLength
+## rownames(37361): ENSG00000000003 ENSG00000000005 ...
+##   ENSG00000283698 ENSG00000283700
+## rowData names(0):
+## colnames(7): control_rep1 control_rep2 ... treat_rep3 treat_rep4
+## colData names(2): condition sample_name</code></pre>
+<p>Remove the empty rows.</p>
+<pre class="r"><code>nrow(dds)</code></pre>
+<pre><code>## [1] 37361</code></pre>
+<pre class="r"><code>dds &lt;- dds[ rowSums(counts(dds)) &gt; 0, ]
+nrow(dds)</code></pre>
+<pre><code>## [1] 25001</code></pre>
+</div>
+<div id="regularized-logarithm-transformation-rlog" class="section level2">
+<h2>Regularized-logarithm transformation (rlog)</h2>
+<p>We will use the regularized log transformation for PCA plot and SD-mean plot. It will reduce the variation on lowly expressed genes.</p>
+<pre class="r"><code>rld &lt;- rlog(dds, blind = FALSE)</code></pre>
+<pre><code>## using &#39;avgTxLength&#39; from assays(dds), correcting for library size</code></pre>
+<pre class="r"><code>head(assay(rld), 3)</code></pre>
+<pre><code>##                 control_rep1 control_rep2 control_rep3 treat_rep1
+## ENSG00000000003    11.300466    11.231395    11.104771  12.783082
+## ENSG00000000419    11.171577    11.132015    11.321105  11.167904
+## ENSG00000000457     8.207076     8.139017     7.899893   8.840509
+##                 treat_rep2 treat_rep3 treat_rep4
+## ENSG00000000003  12.758421  12.810201  12.789334
+## ENSG00000000419  10.826120  10.920410  11.130422
+## ENSG00000000457   8.943653   8.884305   8.846911</code></pre>
+</div>
+<div id="heatmap-showing-sample-distance-rlog-transformed" class="section level2">
+<h2>Heatmap showing sample distance (rlog transformed)</h2>
+<p>The samples can be clearly clustered by the control/treat condition.</p>
+<pre class="r"><code>sampleDists &lt;- dist(t(assay(rld)))
+sampleDistMatrix &lt;- as.matrix( sampleDists )
+colnames(sampleDistMatrix) &lt;- NULL
+colors &lt;- colorRampPalette( rev(brewer.pal(9, &quot;Blues&quot;)) )(255)
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows = sampleDists,
+         clustering_distance_cols = sampleDists,
+         col = colors)</code></pre>
+<p><img src="rnaseq_explore_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div id="pca-plot-rlog-transformed" class="section level2">
+<h2>PCA plot (rlog transformed)</h2>
+<pre class="r"><code>plotPCA(rld)</code></pre>
+<p><img src="rnaseq_explore_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+<div id="differential-expression-analysis" class="section level2">
+<h2>Differential expression analysis</h2>
+<p>Run the differential expression pipeline.</p>
+<pre class="r"><code>dds &lt;- DESeq(dds)</code></pre>
+<pre><code>## estimating size factors</code></pre>
+<pre><code>## using &#39;avgTxLength&#39; from assays(dds), correcting for library size</code></pre>
+<pre><code>## estimating dispersions</code></pre>
+<pre><code>## gene-wise dispersion estimates</code></pre>
+<pre><code>## mean-dispersion relationship</code></pre>
+<pre><code>## final dispersion estimates</code></pre>
+<pre><code>## fitting model and testing</code></pre>
+<p>Then build the results table, we use an adjusted p-value cutoff by 0.05.</p>
+<pre class="r"><code>res &lt;- results(dds, alpha = 0.05)
+head(res[order(res$pvalue), ], n = 3)</code></pre>
+<pre><code>## log2 fold change (MLE): condition treat vs control 
+## Wald test p-value: condition treat vs control 
+## DataFrame with 3 rows and 6 columns
+##                         baseMean    log2FoldChange             lfcSE
+##                        &lt;numeric&gt;         &lt;numeric&gt;         &lt;numeric&gt;
+## ENSG00000241343 10887.8871376054 -4.06463847625495 0.108594662387474
+## ENSG00000185950 7290.71556646402  3.71238174924945 0.103648480871635
+## ENSG00000183054 3308.40662655646  5.76746803913769 0.166493932393504
+##                              stat                pvalue
+##                         &lt;numeric&gt;             &lt;numeric&gt;
+## ENSG00000241343 -37.4294499093518 1.29721089573246e-306
+## ENSG00000185950  35.8170396520052 5.99696386772001e-281
+## ENSG00000183054  34.6407100620727 6.16464222513363e-263
+##                                  padj
+##                             &lt;numeric&gt;
+## ENSG00000241343  2.4815644435362e-302
+## ENSG00000185950 5.73609593947419e-277
+## ENSG00000183054 3.93098685889354e-259</code></pre>
+<pre class="r"><code>mcols(res, use.names = TRUE)</code></pre>
+<pre><code>## DataFrame with 6 rows and 2 columns
+##                        type
+##                 &lt;character&gt;
+## baseMean       intermediate
+## log2FoldChange      results
+## lfcSE               results
+## stat                results
+## pvalue              results
+## padj                results
+##                                                       description
+##                                                       &lt;character&gt;
+## baseMean                mean of normalized counts for all samples
+## log2FoldChange log2 fold change (MLE): condition treat vs control
+## lfcSE                  standard error: condition treat vs control
+## stat                   Wald statistic: condition treat vs control
+## pvalue              Wald test p-value: condition treat vs control
+## padj                                         BH adjusted p-values</code></pre>
+<pre class="r"><code>summary(res)</code></pre>
+<pre><code>## 
+## out of 25001 with nonzero total read count
+## adjusted p-value &lt; 0.05
+## LFC &gt; 0 (up)       : 5536, 22%
+## LFC &lt; 0 (down)     : 5371, 21%
+## outliers [1]       : 54, 0.22%
+## low counts [2]     : 5817, 23%
+## (mean count &lt; 1)
+## [1] see &#39;cooksCutoff&#39; argument of ?results
+## [2] see &#39;independentFiltering&#39; argument of ?results</code></pre>
+</div>
+<div id="ma-plot" class="section level2">
+<h2>MA plot</h2>
+<p>Points are be colored red if the adjusted p value is less than 0.05.</p>
+<pre class="r"><code>plotMA(res)</code></pre>
+<p><img src="rnaseq_explore_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+</div>
+<div id="distribution-of-p-values" class="section level2">
+<h2>Distribution of p values</h2>
+<pre class="r"><code>hist(res$pvalue[res$baseMean &gt; 1], breaks = 0:20/20,
+     col = &quot;grey50&quot;, border = &quot;white&quot;)</code></pre>
+<p><img src="rnaseq_explore_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+</div>
+<div id="annotating-the-gene-names" class="section level2">
+<h2>Annotating the gene names</h2>
+<pre class="r"><code>library(AnnotationDbi)
+library(org.Hs.eg.db)</code></pre>
+<pre><code>## </code></pre>
+<pre class="r"><code>res$symbol &lt;- mapIds(org.Hs.eg.db, keys=row.names(res),
+    column=&quot;SYMBOL&quot;, keytype=&quot;ENSEMBL&quot;, multiVals=&quot;first&quot;)</code></pre>
+<pre><code>## &#39;select()&#39; returned 1:many mapping between keys and columns</code></pre>
+<pre class="r"><code>res &lt;- res[, c(ncol(res), 1:(ncol(res)))]
+head(res[order(res$pvalue),], n = 3)</code></pre>
+<pre><code>## log2 fold change (MLE): condition treat vs control 
+## Wald test p-value: condition treat vs control 
+## DataFrame with 3 rows and 8 columns
+##                      symbol         baseMean    log2FoldChange
+##                 &lt;character&gt;        &lt;numeric&gt;         &lt;numeric&gt;
+## ENSG00000241343      RPL36A 10887.8871376054 -4.06463847625495
+## ENSG00000185950        IRS2 7290.71556646402  3.71238174924945
+## ENSG00000183054       RGPD6 3308.40662655646  5.76746803913769
+##                             lfcSE              stat                pvalue
+##                         &lt;numeric&gt;         &lt;numeric&gt;             &lt;numeric&gt;
+## ENSG00000241343 0.108594662387474 -37.4294499093518 1.29721089573246e-306
+## ENSG00000185950 0.103648480871635  35.8170396520052 5.99696386772001e-281
+## ENSG00000183054 0.166493932393504  34.6407100620727 6.16464222513363e-263
+##                                  padj    symbol.1
+##                             &lt;numeric&gt; &lt;character&gt;
+## ENSG00000241343  2.4815644435362e-302      RPL36A
+## ENSG00000185950 5.73609593947419e-277        IRS2
+## ENSG00000183054 3.93098685889354e-259       RGPD6</code></pre>
+</div>
+<div id="generate-a-table-of-differentially-expressed-genes" class="section level2">
+<h2>Generate a table of differentially expressed genes</h2>
+<p>We use a cutoff of adjusted p value by 0.05.</p>
+<pre class="r"><code>resOrdered &lt;- res[order(res$padj),]
+resOrdered &lt;- as.data.frame(resOrdered)[resOrdered$padj &lt; 0.05, ]
+write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code></pre>
+<p>Here we generate a table showing the top 100 rows.</p>
+<pre class="r"><code>knitr::kable(resOrdered[,c(&quot;symbol&quot;, &quot;baseMean&quot;, &quot;log2FoldChange&quot;, &quot;pvalue&quot;, &quot;padj&quot;)][1:100,])</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="left">symbol</th>
+<th align="right">baseMean</th>
+<th align="right">log2FoldChange</th>
+<th align="right">pvalue</th>
+<th align="right">padj</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ENSG00000241343</td>
+<td align="left">RPL36A</td>
+<td align="right">10887.8871</td>
+<td align="right">-4.064639</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000185950</td>
+<td align="left">IRS2</td>
+<td align="right">7290.7156</td>
+<td align="right">3.712382</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000183054</td>
+<td align="left">RGPD6</td>
+<td align="right">3308.4066</td>
+<td align="right">5.767468</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000104343</td>
+<td align="left">UBE2W</td>
+<td align="right">2651.4545</td>
+<td align="right">2.682886</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000139132</td>
+<td align="left">FGD4</td>
+<td align="right">3702.2576</td>
+<td align="right">4.321604</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000169926</td>
+<td align="left">KLF13</td>
+<td align="right">1866.4032</td>
+<td align="right">5.606474</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000115464</td>
+<td align="left">USP34</td>
+<td align="right">17364.8754</td>
+<td align="right">2.486164</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000198406</td>
+<td align="left">NA</td>
+<td align="right">6818.0099</td>
+<td align="right">3.588508</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000169991</td>
+<td align="left">IFFO2</td>
+<td align="right">3645.1309</td>
+<td align="right">-3.013131</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000112697</td>
+<td align="left">TMEM30A</td>
+<td align="right">13858.6353</td>
+<td align="right">2.621514</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000164252</td>
+<td align="left">AGGF1</td>
+<td align="right">3781.5120</td>
+<td align="right">2.572808</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000205213</td>
+<td align="left">LGR4</td>
+<td align="right">15753.2967</td>
+<td align="right">2.286841</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000095752</td>
+<td align="left">IL11</td>
+<td align="right">2069.0860</td>
+<td align="right">-5.530731</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000151693</td>
+<td align="left">ASAP2</td>
+<td align="right">6035.2033</td>
+<td align="right">2.040470</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000105640</td>
+<td align="left">RPL18A</td>
+<td align="right">10268.6239</td>
+<td align="right">-3.423910</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000157514</td>
+<td align="left">TSC22D3</td>
+<td align="right">3530.9151</td>
+<td align="right">3.567858</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000169905</td>
+<td align="left">TOR1AIP2</td>
+<td align="right">7864.1870</td>
+<td align="right">2.458975</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000069869</td>
+<td align="left">NEDD4</td>
+<td align="right">23357.6691</td>
+<td align="right">2.373807</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000135390</td>
+<td align="left">ATP5MC2</td>
+<td align="right">3978.1643</td>
+<td align="right">-2.583915</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000162980</td>
+<td align="left">ARL5A</td>
+<td align="right">5732.0029</td>
+<td align="right">2.960874</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000109805</td>
+<td align="left">NCAPG</td>
+<td align="right">5259.7958</td>
+<td align="right">2.451828</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000198964</td>
+<td align="left">SGMS1</td>
+<td align="right">5516.1513</td>
+<td align="right">2.490098</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000082996</td>
+<td align="left">RNF13</td>
+<td align="right">4250.6566</td>
+<td align="right">2.398747</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000280759</td>
+<td align="left">AP2A2</td>
+<td align="right">1959.9337</td>
+<td align="right">2.483440</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000128342</td>
+<td align="left">LIF</td>
+<td align="right">2280.9282</td>
+<td align="right">-2.763205</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000104695</td>
+<td align="left">PPP2CB</td>
+<td align="right">13057.4130</td>
+<td align="right">2.649907</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000198060</td>
+<td align="left">MARCH5</td>
+<td align="right">5742.8492</td>
+<td align="right">2.775426</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000174231</td>
+<td align="left">PRPF8</td>
+<td align="right">553.2494</td>
+<td align="right">5.949763</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000138448</td>
+<td align="left">ITGAV</td>
+<td align="right">41142.4352</td>
+<td align="right">1.949992</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000107372</td>
+<td align="left">ZFAND5</td>
+<td align="right">21828.9852</td>
+<td align="right">2.105170</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000105186</td>
+<td align="left">ANKRD27</td>
+<td align="right">4925.9801</td>
+<td align="right">2.718561</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000126773</td>
+<td align="left">PCNX4</td>
+<td align="right">3906.1420</td>
+<td align="right">1.778355</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000174738</td>
+<td align="left">NR1D2</td>
+<td align="right">4559.5019</td>
+<td align="right">2.863783</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000062650</td>
+<td align="left">WAPL</td>
+<td align="right">3916.2182</td>
+<td align="right">1.941971</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000102309</td>
+<td align="left">PIN4</td>
+<td align="right">1082.1887</td>
+<td align="right">-3.364524</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000108424</td>
+<td align="left">KPNB1</td>
+<td align="right">46025.2744</td>
+<td align="right">2.059849</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000155850</td>
+<td align="left">SLC26A2</td>
+<td align="right">24351.1755</td>
+<td align="right">2.701976</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000132294</td>
+<td align="left">EFR3A</td>
+<td align="right">9226.3675</td>
+<td align="right">2.181633</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000120451</td>
+<td align="left">SNX19</td>
+<td align="right">5771.2761</td>
+<td align="right">3.478311</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000153207</td>
+<td align="left">AHCTF1</td>
+<td align="right">4147.0884</td>
+<td align="right">2.774821</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000053770</td>
+<td align="left">AP5M1</td>
+<td align="right">3152.0765</td>
+<td align="right">1.951206</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000115760</td>
+<td align="left">BIRC6</td>
+<td align="right">9424.7527</td>
+<td align="right">3.119801</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000135968</td>
+<td align="left">GCC2</td>
+<td align="right">4173.6160</td>
+<td align="right">1.994533</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000198839</td>
+<td align="left">ZNF277</td>
+<td align="right">1767.2793</td>
+<td align="right">2.399365</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000132849</td>
+<td align="left">PATJ</td>
+<td align="right">1473.7419</td>
+<td align="right">2.307424</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000096746</td>
+<td align="left">HNRNPH3</td>
+<td align="right">9703.3119</td>
+<td align="right">-1.936980</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000171634</td>
+<td align="left">BPTF</td>
+<td align="right">9114.1276</td>
+<td align="right">2.379349</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000115159</td>
+<td align="left">GPD2</td>
+<td align="right">7357.9916</td>
+<td align="right">2.453603</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000163659</td>
+<td align="left">TIPARP</td>
+<td align="right">5901.2881</td>
+<td align="right">3.438473</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000104067</td>
+<td align="left">TJP1</td>
+<td align="right">9813.8213</td>
+<td align="right">2.550050</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000100142</td>
+<td align="left">POLR2F</td>
+<td align="right">1133.7068</td>
+<td align="right">-2.773126</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000167131</td>
+<td align="left">CCDC103</td>
+<td align="right">434.1273</td>
+<td align="right">-3.374421</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000130513</td>
+<td align="left">GDF15</td>
+<td align="right">696.1152</td>
+<td align="right">-4.714202</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000066557</td>
+<td align="left">LRRC40</td>
+<td align="right">2248.9189</td>
+<td align="right">2.234040</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000169689</td>
+<td align="left">CENPX</td>
+<td align="right">1552.9846</td>
+<td align="right">-2.641355</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000160201</td>
+<td align="left">U2AF1</td>
+<td align="right">2610.6607</td>
+<td align="right">-5.153143</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000117906</td>
+<td align="left">RCN2</td>
+<td align="right">10500.3311</td>
+<td align="right">2.257670</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000145912</td>
+<td align="left">NHP2</td>
+<td align="right">3671.0196</td>
+<td align="right">-3.146431</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000125971</td>
+<td align="left">DYNLRB1</td>
+<td align="right">1537.3093</td>
+<td align="right">-2.208325</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000173486</td>
+<td align="left">FKBP2</td>
+<td align="right">1021.7478</td>
+<td align="right">-2.825592</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000132510</td>
+<td align="left">KDM6B</td>
+<td align="right">727.1086</td>
+<td align="right">-2.868732</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000249072</td>
+<td align="left">NA</td>
+<td align="right">27691.9981</td>
+<td align="right">4.541639</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000277101</td>
+<td align="left">ARHGEF26</td>
+<td align="right">1098.1216</td>
+<td align="right">2.608272</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000115112</td>
+<td align="left">TFCP2L1</td>
+<td align="right">5053.2805</td>
+<td align="right">5.008932</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000079332</td>
+<td align="left">SAR1A</td>
+<td align="right">7295.7534</td>
+<td align="right">2.044449</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000075624</td>
+<td align="left">ACTB</td>
+<td align="right">20865.5056</td>
+<td align="right">-4.669003</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000112701</td>
+<td align="left">SENP6</td>
+<td align="right">4517.5870</td>
+<td align="right">2.037316</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000196419</td>
+<td align="left">XRCC6</td>
+<td align="right">16845.1131</td>
+<td align="right">-2.291228</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000126778</td>
+<td align="left">SIX1</td>
+<td align="right">301.3869</td>
+<td align="right">5.049550</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000135932</td>
+<td align="left">CAB39</td>
+<td align="right">5710.7156</td>
+<td align="right">1.967472</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000123505</td>
+<td align="left">AMD1</td>
+<td align="right">19265.0265</td>
+<td align="right">2.185447</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000134371</td>
+<td align="left">CDC73</td>
+<td align="right">3338.6645</td>
+<td align="right">4.718001</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000138771</td>
+<td align="left">SHROOM3</td>
+<td align="right">1763.1552</td>
+<td align="right">2.857985</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000150907</td>
+<td align="left">FOXO1</td>
+<td align="right">1041.2224</td>
+<td align="right">2.465024</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000241468</td>
+<td align="left">ATP5MF</td>
+<td align="right">3250.0801</td>
+<td align="right">-3.026388</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000159579</td>
+<td align="left">RSPRY1</td>
+<td align="right">4527.5991</td>
+<td align="right">2.080586</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000168497</td>
+<td align="left">CAVIN2</td>
+<td align="right">3634.7480</td>
+<td align="right">2.794738</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000023839</td>
+<td align="left">ABCC2</td>
+<td align="right">3891.8436</td>
+<td align="right">3.939480</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000142188</td>
+<td align="left">TMEM50B</td>
+<td align="right">1623.4726</td>
+<td align="right">2.780489</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000111696</td>
+<td align="left">NT5DC3</td>
+<td align="right">4020.3129</td>
+<td align="right">2.612858</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000143384</td>
+<td align="left">MCL1</td>
+<td align="right">21868.4203</td>
+<td align="right">2.276826</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000248643</td>
+<td align="left">RBM14-RBM4</td>
+<td align="right">354.2526</td>
+<td align="right">-4.345695</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000272869</td>
+<td align="left">NA</td>
+<td align="right">713.0474</td>
+<td align="right">-4.266895</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000176393</td>
+<td align="left">RNPEP</td>
+<td align="right">7583.2691</td>
+<td align="right">2.827283</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000102531</td>
+<td align="left">FNDC3A</td>
+<td align="right">4715.8965</td>
+<td align="right">1.590473</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000133983</td>
+<td align="left">COX16</td>
+<td align="right">4894.3503</td>
+<td align="right">3.011163</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000270757</td>
+<td align="left">HSPE1-MOB4</td>
+<td align="right">1256.6586</td>
+<td align="right">2.855548</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000115268</td>
+<td align="left">RPS15</td>
+<td align="right">5365.9039</td>
+<td align="right">-2.828864</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000174886</td>
+<td align="left">NDUFA11</td>
+<td align="right">1011.9536</td>
+<td align="right">-2.416126</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000169020</td>
+<td align="left">ATP5ME</td>
+<td align="right">1345.8550</td>
+<td align="right">-4.018082</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000099977</td>
+<td align="left">DDT</td>
+<td align="right">1077.4595</td>
+<td align="right">-2.585381</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000087074</td>
+<td align="left">PPP1R15A</td>
+<td align="right">789.4097</td>
+<td align="right">-2.461047</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000227715</td>
+<td align="left">HLA-A</td>
+<td align="right">477.0081</td>
+<td align="right">3.134361</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000108691</td>
+<td align="left">CCL2</td>
+<td align="right">988.4682</td>
+<td align="right">-2.954339</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000162599</td>
+<td align="left">NFIA</td>
+<td align="right">3003.3625</td>
+<td align="right">2.577884</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000122376</td>
+<td align="left">FAM35A</td>
+<td align="right">5726.1700</td>
+<td align="right">2.126525</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000197102</td>
+<td align="left">DYNC1H1</td>
+<td align="right">3043.1864</td>
+<td align="right">3.758437</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000136521</td>
+<td align="left">NDUFB5</td>
+<td align="right">3426.6347</td>
+<td align="right">2.476269</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td>ENSG00000160062</td>
+<td align="left">ZBTB8A</td>
+<td align="right">879.7523</td>
+<td align="right">2.150053</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>ENSG00000091409</td>
+<td align="left">ITGA6</td>
+<td align="right">6660.8516</td>
+<td align="right">2.348076</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
