@@ -13,6 +13,7 @@ do
         -1 data/rnaseq/"$sample"_read1.fastq.gz \
         -2 data/rnaseq/"$sample"_read2.fastq.gz \
         -o result/salmon_quant/"$sample"        \
-        --numBootstraps 30
+        --numBootstraps 30                      \
+        --gcBias
 done
 
