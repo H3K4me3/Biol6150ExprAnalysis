@@ -154,14 +154,13 @@ head(res[order(res$pvalue),], n = 3)
 
 ## Generate a table of differentially expressed genes
 
-We use a cutoff of adjusted p value by 0.05.
-
 ```{r}
 resOrdered <- res[order(res$padj),]
-resOrdered <- as.data.frame(resOrdered)[resOrdered$padj < 0.05, ]
+#resOrdered <- resOrdered[resOrdered$padj < 0.05, ]
+resOrdered <- as.data.frame(resOrdered)
 resOrdered$log10pvalue <- log10(resOrdered$pvalue)
 resOrdered$log10padj <- log10(resOrdered$padj)
-write.csv(resOrdered, file = here("result/rnaseq-DE-genes.csv"))
+#write.csv(resOrdered, file = here("result/rnaseq-DE-genes.csv"))
 ```
 
 Here we generate a table showing the top 100 rows.

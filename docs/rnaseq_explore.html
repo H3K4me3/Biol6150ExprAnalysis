@@ -344,12 +344,12 @@ head(res[order(res$pvalue),], n = 3)</code></pre>
 </div>
 <div id="generate-a-table-of-differentially-expressed-genes" class="section level2">
 <h2>Generate a table of differentially expressed genes</h2>
-<p>We use a cutoff of adjusted p value by 0.05.</p>
 <pre class="r"><code>resOrdered &lt;- res[order(res$padj),]
-resOrdered &lt;- as.data.frame(resOrdered)[resOrdered$padj &lt; 0.05, ]
+#resOrdered &lt;- resOrdered[resOrdered$padj &lt; 0.05, ]
+resOrdered &lt;- as.data.frame(resOrdered)
 resOrdered$log10pvalue &lt;- log10(resOrdered$pvalue)
 resOrdered$log10padj &lt;- log10(resOrdered$padj)
-write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code></pre>
+#write.csv(resOrdered, file = here(&quot;result/rnaseq-DE-genes.csv&quot;))</code></pre>
 <p>Here we generate a table showing the top 100 rows.</p>
 <pre class="r"><code>knitr::kable(resOrdered[,c(&quot;symbol&quot;, &quot;baseMean&quot;, &quot;log2FoldChange&quot;, &quot;pvalue&quot;,
                            &quot;log10pvalue&quot;, &quot;padj&quot;, &quot;log10padj&quot;)][1:100,])</code></pre>
