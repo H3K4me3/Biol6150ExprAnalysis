@@ -154,22 +154,41 @@ head(res[order(res$pvalue),], n = 3)
 
 ## Generate a table of differentially expressed genes
 
+We will select the genes that have adjusted p value < 0.05 and order
+them by their fold change.
+
+Also, since there are a lot of genes differentially expressed, we may be
+interested in ones that have larger fold change. We will select the ones
+that have abs(log2foldchange) > 2.
+
+
 ```{r}
-resOrdered <- res[order(res$padj),]
-#resOrdered <- resOrdered[resOrdered$padj < 0.05, ]
-resOrdered <- as.data.frame(resOrdered)
-resOrdered$log10pvalue <- log10(resOrdered$pvalue)
-resOrdered$log10padj <- log10(resOrdered$padj)
-#write.csv(resOrdered, file = here("result/rnaseq-DE-genes.csv"))
+selected <- res[!is.na(res$padj), ]
+selected <- selected[selected$padj < 0.05, ]
+```
+
+The following is the distribution of log2foldchange in genes with
+adjusted p value < 0.05. The yellow bars are ones with fold change < 2, which
+will be filtered.
+
+```{r}
+hist(sort(selected$log2FoldChange), breaks = 30,
+     col = c(rep("white", 14), rep("yellow", 2), rep("white", 14)), xlim = c(-15, 15))
+selected <- selected[abs(selected$log2FoldChange) > 2, ]
+selected <- selected[order(abs(selected$log2FoldChange), decreasing = TRUE), ]
+```
+
+```{r}
+selected <- as.data.frame(selected)
+selected$log10pvalue <- log10(selected$pvalue)
+selected$log10padj <- log10(selected$padj)
+selected <- selected[ , c("symbol", "baseMean", "log2FoldChange", "pvalue",
+                         "log10pvalue", "padj", "log10padj")]
 ```
 
 Here we generate a table showing the top 100 rows.
 
 ```{r}
-knitr::kable(resOrdered[,c("symbol", "baseMean", "log2FoldChange", "pvalue",
-                           "log10pvalue", "padj", "log10padj")][1:100,])
+knitr::kable(selected[1:100,])
 ```
-
-
-
 
