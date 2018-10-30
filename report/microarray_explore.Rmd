@@ -271,18 +271,40 @@ top$gene_name <- get_genename(rownames(top))
 We use a p value cutoff by 0.001.
 
 ```{r}
-top <- top[, c("symbol", "gene_name", "logFC", "P.Value", "adj.P.Val")]
-top <- cbind(data.frame(probeID = rownames(top), stringsAsFactors = FALSE), top)
-rownames(top) <- NULL
-top <- top[top$P.Value < 0.001,]
-knitr::kable(top)
+selected <- top[, c("symbol", "gene_name", "logFC", "P.Value", "adj.P.Val")]
+#top <- cbind(data.frame(probeID = rownames(top), stringsAsFactors = FALSE), top)
+#rownames(top) <- NULL
+selected <- selected[selected$P.Value < 0.001,]
+knitr::kable(selected)
 ```
 
 
+## Gene clustering
+
+The following is a heatmap of gene expression values of the differentially
+expressed genes.
+
+```{r}
+library(pheatmap)
+mat <- exprs(edata)[rownames(selected), ]
+rownames(mat) <- selected$symbol
+pData(edata)$sample_name <- rownames(pData(edata))
+anno <- as.data.frame(pData(edata))[, c("group", "sample_name")]
+pheatmap(mat, annotation_col = anno,
+         main = "Heatmap of gene expression levels")
+```
+
+We can roughly divide the genes (probes) into two clusters, and the control/treat samples
+are also clearly separated.
+
+## PCA plot
 
 
+```{r}
+library(ggfortify)
+autoplot(prcomp(exprs(edata)[rownames(selected), ]))
+```
 
-
-
+The PCA plot did not provide much useful information.
 
 
