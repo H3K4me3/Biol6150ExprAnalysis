@@ -82,8 +82,11 @@ branch `with_quant_result`.
 
 ## Analysis of the microarray data
 
-Checkout this [link](https://h3k4me3.github.io/code6150/microarray_explore.html).
+https://h3k4me3.github.io/code6150/microarray_explore.html
 
+## Analysis of the RNA-seq data
+
+https://h3k4me3.github.io/code6150/rnaseq_explore.html
 
 ## Reference
 
