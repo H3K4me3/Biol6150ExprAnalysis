@@ -94,6 +94,8 @@ pheatmap(sampleDistMatrix,
 
 ## PCA plot (rlog transformed)
 
+Previously we have conducted PCA analysis on samples. Here do PCA plot on genes.
+
 ```{r}
 plotPCA(rld)
 ```
@@ -191,4 +193,81 @@ Here we generate a table showing the top 100 rows.
 ```{r}
 knitr::kable(selected[1:100,])
 ```
+
+
+## Gene clustering
+
+### Clustering of all selected genes by expression level (rlog transformed)
+
+```{r}
+library(genefilter)
+mat <- assay(rld)[rownames(selected), ]
+anno <- as.data.frame(colData(rld)[, c("condition", "sample_name")])
+pheatmap(mat, annotation_col = anno, show_rownames = FALSE,
+         main = "Heatmap of rlog-transformed gene expression levels")
+```
+
+### Clustering of all selected genes by relative expression levels across samples
+
+Instead of absolute expression strength, the following plot uses the amount by which
+each gene deviates in a specific sample from the gene's average across all samples.
+
+The trees on top shows the clustering by samples, the trees on left shows the clustering
+by genes. It can be shown that the control and treat samples are clearly separated and
+the genes may be roughly divided into two clusters (up-regulated and down-regulated).
+
+```{r}
+mat <- mat - rowMeans(mat)
+pheatmap(mat, annotation_col = anno, show_rownames = FALSE,
+         main = "Heatmap of relative rlog-transformed values across samples")
+```
+
+### Clustering of genes with the highest variance across samples
+
+Here we select the 30 genes with the highest variance of expression values across
+samples.
+
+```{r}
+library(genefilter)
+topVarGenes <- head(order(rowVars(assay(rld)), decreasing = TRUE), 30)
+mat <- assay(rld)[topVarGenes, ]
+mat[rownames(mat) %in% rownames(selected), ]
+mat <- mat - rowMeans(mat)
+anno <- as.data.frame(colData(rld)[, c("condition", "sample_name")])
+pheatmap(mat, annotation_col = anno,
+         main = "Heatmap of relative rlog-transformed values across samples")
+```
+
+
+## PCA plot of genes
+
+We will use rlog-transformed values. The following is a PCA plot of all
+selected genes.
+
+```{r}
+library(ggfortify)
+autoplot(prcomp(assay(rld)[rownames(assay(rld)) %in% rownames(selected), ]), size = 1, alpha = 0.8)
+```
+
+It is clear that the genes can be separated by two parts by the second dimension.
+If we plot all the genes like the following,
+it will be clear for us that the second dimension aligns with the foldchange -- since
+we have filtered the genes with low foldchange. Thus the two clusters are
+up-regulated genes and down-regulated genes.
+
+```{r}
+autoplot(prcomp(assay(rld)[rownames(assay(rld)), ]), size = 1, alpha = 0.8)
+```
+
+### PCA plot of genes with high variance
+
+Again, we select the genes with the highest variance across samples:
+
+```{r}
+topVarGenes <- head(order(rowVars(assay(rld)), decreasing = TRUE), 50)
+tmp <- assay(rld)[topVarGenes, ]
+tmp <- tmp[rownames(tmp) %in% rownames(selected), ]
+autoplot(prcomp(tmp))
+```
+
 
