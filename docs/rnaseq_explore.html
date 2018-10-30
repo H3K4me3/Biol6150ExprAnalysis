@@ -325,9 +325,8 @@ head(res[order(res$pvalue), ], n = 3)</code></pre>
 <div id="annotating-the-gene-names" class="section level2">
 <h2>Annotating the gene names</h2>
 <pre class="r"><code>library(AnnotationDbi)
-library(org.Hs.eg.db)</code></pre>
-<pre><code>## </code></pre>
-<pre class="r"><code>res$symbol &lt;- mapIds(org.Hs.eg.db, keys=row.names(res),
+library(org.Hs.eg.db)
+res$symbol &lt;- mapIds(org.Hs.eg.db, keys=row.names(res),
     column=&quot;SYMBOL&quot;, keytype=&quot;ENSEMBL&quot;, multiVals=&quot;first&quot;)</code></pre>
 <pre><code>## &#39;select()&#39; returned 1:many mapping between keys and columns</code></pre>
 <pre class="r"><code>res &lt;- res[, c(ncol(res), 1:(ncol(res)))]
@@ -1418,56 +1417,8 @@ pheatmap(mat, annotation_col = anno, show_rownames = FALSE,
 <pre class="r"><code>library(genefilter)
 topVarGenes &lt;- head(order(rowVars(assay(rld)), decreasing = TRUE), 30)
 mat &lt;- assay(rld)[topVarGenes, ]
-mat[rownames(mat) %in% rownames(selected), ]</code></pre>
-<pre><code>##                 control_rep1 control_rep2 control_rep3 treat_rep1
-## ENSG00000234851    14.287152    14.394471    14.575809   4.996204
-## ENSG00000235655     3.724976     3.668961     3.774155  12.433176
-## ENSG00000282230     3.676304     3.620618     3.725190  11.636829
-## ENSG00000283485    12.417806    12.474237    12.637669   4.538065
-## ENSG00000244398     3.589806     3.535514     3.637460  11.412563
-## ENSG00000280830     3.560777     3.506919     3.608047  11.155568
-## ENSG00000282785     3.960104     3.470036     3.569170  10.413783
-## ENSG00000235043     3.413983     3.362500     3.459154   9.805487
-## ENSG00000204388     3.439449     3.388162     3.484452  10.116420
-## ENSG00000255072     3.435709     3.384466     3.480673   9.904391
-## ENSG00000220842     3.391858     3.341276     3.436239   9.106863
-## ENSG00000269378    10.653102    10.609421    10.484348   4.231551
-## ENSG00000186076     3.587151     3.732968     3.189412  10.024772
-## ENSG00000283229     3.019004     2.972581     3.059690   9.319061
-## ENSG00000230043     3.906296     3.382907     3.477586   9.980339
-## ENSG00000213442     3.334721     3.286683     3.376871   9.478075
-## ENSG00000256206     5.328694     5.168710     5.385479  11.438963
-## ENSG00000204072     3.336821     3.289136     3.378663   8.976130
-## ENSG00000283460     3.327959     3.280623     3.369495   9.000999
-## ENSG00000224472     3.326870     3.279811     3.368164   9.123461
-## ENSG00000280852     2.581596     3.130088     2.759862   8.566628
-## ENSG00000183054     6.643146     7.342571     7.121433  12.351383
-## ENSG00000262243     3.247628     3.203404     3.286437   8.936587
-##                 treat_rep2 treat_rep3 treat_rep4
-## ENSG00000234851   4.827624   4.906850   4.727588
-## ENSG00000235655  12.316667  12.165076  11.324159
-## ENSG00000282230  10.740319  11.814460  12.966135
-## ENSG00000283485   4.522251   4.597297   4.427342
-## ENSG00000244398  10.925016  10.968560  11.263693
-## ENSG00000280830  10.700926  10.694911  11.221839
-## ENSG00000282785  10.494431  10.733617  10.280575
-## ENSG00000235043   9.694530   9.340460  11.048476
-## ENSG00000204388  10.114730   9.800799  10.050071
-## ENSG00000255072   9.765009  10.325621  10.006213
-## ENSG00000220842   9.377806   9.968825  10.508531
-## ENSG00000269378   4.217100   4.285631   4.130259
-## ENSG00000186076  10.249365   9.422688   3.899653
-## ENSG00000283229   9.923640   9.058405   3.735543
-## ENSG00000230043   9.924928   9.545089   9.466382
-## ENSG00000213442   9.409849   8.493135   9.209408
-## ENSG00000256206  11.238519  11.409654   9.836769
-## ENSG00000204072   8.928135   9.052621   9.443404
-## ENSG00000283460   8.718743   8.959206   9.405479
-## ENSG00000224472   8.969772   9.089686   8.724185
-## ENSG00000280852   8.018797   8.476552   8.059353
-## ENSG00000183054  12.363093  12.253034  12.251812
-## ENSG00000262243   8.920689   7.736816   7.830204</code></pre>
-<pre class="r"><code>mat &lt;- mat - rowMeans(mat)
+mat &lt;- mat[rownames(mat) %in% rownames(selected), ]
+mat &lt;- mat - rowMeans(mat)
 anno &lt;- as.data.frame(colData(rld)[, c(&quot;condition&quot;, &quot;sample_name&quot;)])
 pheatmap(mat, annotation_col = anno,
          main = &quot;Heatmap of relative rlog-transformed values across samples&quot;)</code></pre>
