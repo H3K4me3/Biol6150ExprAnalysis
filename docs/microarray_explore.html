@@ -149,6 +149,7 @@ $(document).ready(function () {
 <li><a href="#annotating-genes">Annotating genes</a></li>
 <li><a href="#generate-a-table-of-differentially-expressed-genes">Generate a table of differentially expressed genes</a></li>
 <li><a href="#gene-clustering">Gene clustering</a></li>
+<li><a href="#pca-plot">PCA plot</a></li>
 </ul>
 </div>
 
@@ -428,15 +429,15 @@ top$symbol &lt;- get_symbol(rownames(top))</code></pre>
 <div id="generate-a-table-of-differentially-expressed-genes" class="section level2">
 <h2>Generate a table of differentially expressed genes</h2>
 <p>We use a p value cutoff by 0.001.</p>
-<pre class="r"><code>top &lt;- top[, c(&quot;symbol&quot;, &quot;gene_name&quot;, &quot;logFC&quot;, &quot;P.Value&quot;, &quot;adj.P.Val&quot;)]
-top &lt;- cbind(data.frame(probeID = rownames(top), stringsAsFactors = FALSE), top)
-rownames(top) &lt;- NULL
-top &lt;- top[top$P.Value &lt; 0.001,]
-knitr::kable(top)</code></pre>
+<pre class="r"><code>selected &lt;- top[, c(&quot;symbol&quot;, &quot;gene_name&quot;, &quot;logFC&quot;, &quot;P.Value&quot;, &quot;adj.P.Val&quot;)]
+#top &lt;- cbind(data.frame(probeID = rownames(top), stringsAsFactors = FALSE), top)
+#rownames(top) &lt;- NULL
+selected &lt;- selected[selected$P.Value &lt; 0.001,]
+knitr::kable(selected)</code></pre>
 <table>
 <thead>
 <tr class="header">
-<th align="left">probeID</th>
+<th></th>
 <th align="left">symbol</th>
 <th align="left">gene_name</th>
 <th align="right">logFC</th>
@@ -446,7 +447,7 @@ knitr::kable(top)</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">37701_at</td>
+<td>37701_at</td>
 <td align="left">RGS2</td>
 <td align="left">regulator of G protein signaling 2</td>
 <td align="right">4.4877683</td>
@@ -454,7 +455,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.0063493</td>
 </tr>
 <tr class="even">
-<td align="left">39528_at</td>
+<td>39528_at</td>
 <td align="left">RRAD</td>
 <td align="left">RRAD, Ras related glycolysis inhibitor and calcium channel regulator</td>
 <td align="right">2.1552028</td>
@@ -462,7 +463,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.0349160</td>
 </tr>
 <tr class="odd">
-<td align="left">1776_at</td>
+<td>1776_at</td>
 <td align="left">RRAD</td>
 <td align="left">RRAD, Ras related glycolysis inhibitor and calcium channel regulator</td>
 <td align="right">2.0901488</td>
@@ -470,7 +471,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.0349160</td>
 </tr>
 <tr class="even">
-<td align="left">39681_at</td>
+<td>39681_at</td>
 <td align="left">ZBTB16</td>
 <td align="left">zinc finger and BTB domain containing 16</td>
 <td align="right">2.2196632</td>
@@ -478,7 +479,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.0349160</td>
 </tr>
 <tr class="odd">
-<td align="left">40202_at</td>
+<td>40202_at</td>
 <td align="left">KLF9</td>
 <td align="left">Kruppel like factor 9</td>
 <td align="right">1.9415580</td>
@@ -486,7 +487,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.0398281</td>
 </tr>
 <tr class="even">
-<td align="left">36630_at</td>
+<td>36630_at</td>
 <td align="left">TSC22D3</td>
 <td align="left">TSC22 domain family member 3</td>
 <td align="right">1.9953514</td>
@@ -494,7 +495,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.0499183</td>
 </tr>
 <tr class="odd">
-<td align="left">1814_at</td>
+<td>1814_at</td>
 <td align="left">TGFBR2</td>
 <td align="left">transforming growth factor beta receptor 2</td>
 <td align="right">1.6309718</td>
@@ -502,7 +503,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.0785749</td>
 </tr>
 <tr class="even">
-<td align="left">36629_at</td>
+<td>36629_at</td>
 <td align="left">TSC22D3</td>
 <td align="left">TSC22 domain family member 3</td>
 <td align="right">4.2511045</td>
@@ -510,7 +511,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.0785749</td>
 </tr>
 <tr class="odd">
-<td align="left">37760_at</td>
+<td>37760_at</td>
 <td align="left">BAIAP2</td>
 <td align="left">BAI1 associated protein 2</td>
 <td align="right">1.3443442</td>
@@ -518,7 +519,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.1325401</td>
 </tr>
 <tr class="even">
-<td align="left">31850_at</td>
+<td>31850_at</td>
 <td align="left">GCLC</td>
 <td align="left">glutamate-cysteine ligase catalytic subunit</td>
 <td align="right">1.2492825</td>
@@ -526,7 +527,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.1481454</td>
 </tr>
 <tr class="odd">
-<td align="left">34721_at</td>
+<td>34721_at</td>
 <td align="left">FKBP5</td>
 <td align="left">FK506 binding protein 5</td>
 <td align="right">2.8581334</td>
@@ -534,7 +535,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.1601256</td>
 </tr>
 <tr class="even">
-<td align="left">38013_at</td>
+<td>38013_at</td>
 <td align="left">MTUS1</td>
 <td align="left">microtubule associated scaffold protein 1</td>
 <td align="right">1.1129654</td>
@@ -542,7 +543,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2624371</td>
 </tr>
 <tr class="odd">
-<td align="left">36100_at</td>
+<td>36100_at</td>
 <td align="left">VEGFA</td>
 <td align="left">vascular endothelial growth factor A</td>
 <td align="right">-1.2173336</td>
@@ -550,7 +551,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2872803</td>
 </tr>
 <tr class="even">
-<td align="left">33113_at</td>
+<td>33113_at</td>
 <td align="left">CITED2</td>
 <td align="left">Cbp/p300 interacting transactivator with Glu/Asp rich carboxy-terminal domain 2</td>
 <td align="right">1.1614203</td>
@@ -558,7 +559,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2872803</td>
 </tr>
 <tr class="odd">
-<td align="left">37225_at</td>
+<td>37225_at</td>
 <td align="left">KANK1</td>
 <td align="left">KN motif and ankyrin repeat domains 1</td>
 <td align="right">1.0982152</td>
@@ -566,7 +567,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2872803</td>
 </tr>
 <tr class="even">
-<td align="left">40855_at</td>
+<td>40855_at</td>
 <td align="left">SAMD4A</td>
 <td align="left">sterile alpha motif domain containing 4A</td>
 <td align="right">1.0942596</td>
@@ -574,7 +575,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2872803</td>
 </tr>
 <tr class="odd">
-<td align="left">37430_at</td>
+<td>37430_at</td>
 <td align="left">ALOX15B</td>
 <td align="left">arachidonate 15-lipoxygenase, type B</td>
 <td align="right">1.7852935</td>
@@ -582,7 +583,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2993091</td>
 </tr>
 <tr class="even">
-<td align="left">634_at</td>
+<td>634_at</td>
 <td align="left">PRSS8</td>
 <td align="left">serine protease 8</td>
 <td align="right">1.0246834</td>
@@ -590,7 +591,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2993091</td>
 </tr>
 <tr class="odd">
-<td align="left">1052_s_at</td>
+<td>1052_s_at</td>
 <td align="left">CEBPD</td>
 <td align="left">CCAAT enhancer binding protein delta</td>
 <td align="right">1.2372588</td>
@@ -598,7 +599,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2993091</td>
 </tr>
 <tr class="even">
-<td align="left">33272_at</td>
+<td>33272_at</td>
 <td align="left">SAA1</td>
 <td align="left">serum amyloid A1</td>
 <td align="right">1.7293550</td>
@@ -606,7 +607,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2993091</td>
 </tr>
 <tr class="odd">
-<td align="left">40522_at</td>
+<td>40522_at</td>
 <td align="left">GLUL</td>
 <td align="left">glutamate-ammonia ligase</td>
 <td align="right">2.8331430</td>
@@ -614,7 +615,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2993091</td>
 </tr>
 <tr class="even">
-<td align="left">33900_at</td>
+<td>33900_at</td>
 <td align="left">FSTL3</td>
 <td align="left">follistatin like 3</td>
 <td align="right">0.9502991</td>
@@ -622,7 +623,7 @@ knitr::kable(top)</code></pre>
 <td align="right">0.2993091</td>
 </tr>
 <tr class="odd">
-<td align="left">33131_at</td>
+<td>33131_at</td>
 <td align="left">SOX4</td>
 <td align="left">SRY-box 4</td>
 <td align="right">-0.9740144</td>
@@ -634,7 +635,23 @@ knitr::kable(top)</code></pre>
 </div>
 <div id="gene-clustering" class="section level2">
 <h2>Gene clustering</h2>
-<p>Here we cluster genes by</p>
+<p>The following is a heatmap of gene expression values of the differentially expressed genes.</p>
+<pre class="r"><code>library(pheatmap)
+mat &lt;- exprs(edata)[rownames(selected), ]
+rownames(mat) &lt;- selected$symbol
+pData(edata)$sample_name &lt;- rownames(pData(edata))
+anno &lt;- as.data.frame(pData(edata))[, c(&quot;group&quot;, &quot;sample_name&quot;)]
+pheatmap(mat, annotation_col = anno,
+         main = &quot;Heatmap of gene expression levels&quot;)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>We can roughly divide the genes (probes) into two clusters, and the control/treat samples are also clearly separated.</p>
+</div>
+<div id="pca-plot" class="section level2">
+<h2>PCA plot</h2>
+<pre class="r"><code>library(ggfortify)
+autoplot(prcomp(exprs(edata)[rownames(selected), ]))</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p>The PCA plot did not provide much useful information.</p>
 </div>
 
 
