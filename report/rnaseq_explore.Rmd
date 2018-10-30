@@ -231,7 +231,7 @@ samples.
 library(genefilter)
 topVarGenes <- head(order(rowVars(assay(rld)), decreasing = TRUE), 30)
 mat <- assay(rld)[topVarGenes, ]
-mat[rownames(mat) %in% rownames(selected), ]
+mat <- mat[rownames(mat) %in% rownames(selected), ]
 mat <- mat - rowMeans(mat)
 anno <- as.data.frame(colData(rld)[, c("condition", "sample_name")])
 pheatmap(mat, annotation_col = anno,
