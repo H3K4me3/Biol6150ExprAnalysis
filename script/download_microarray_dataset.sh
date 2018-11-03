@@ -15,5 +15,5 @@ curl 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE26487&format=file' \
 tar xvf GSE26487_RAW.tar
 rm GSE26487_RAW.tar
 
-find . -type f | egrep -v "(GSM651310|GSM651320|GSM651315|GSM651325)" | xargs rm
+#find . -type f | egrep -v "(GSM651310|GSM651320|GSM651315|GSM651325)" | xargs rm
 
