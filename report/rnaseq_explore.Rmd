@@ -150,7 +150,7 @@ library(AnnotationDbi)
 library(org.Hs.eg.db)
 res$symbol <- mapIds(org.Hs.eg.db, keys=row.names(res),
     column="SYMBOL", keytype="ENSEMBL", multiVals="first")
-res <- res[, c(ncol(res), 1:(ncol(res)))]
+res <- res[, c(ncol(res), 1:(ncol(res)-1))]
 head(res[order(res$pvalue),], n = 3)
 ```
 
@@ -169,6 +169,8 @@ selected <- res[!is.na(res$padj), ]
 selected <- selected[selected$padj < 0.05, ]
 ```
 
+We selected `r nrow(selected)` out of `r nrow(res)` genes in the step above.
+
 The following is the distribution of log2foldchange in genes with
 adjusted p value < 0.05. The yellow bars are ones with fold change < 2, which
 will be filtered.
@@ -180,6 +182,10 @@ selected <- selected[abs(selected$log2FoldChange) > 2, ]
 selected <- selected[order(abs(selected$log2FoldChange), decreasing = TRUE), ]
 ```
 
+After filtering by fold change, we finally selected `r nrow(selected)` genes.
+
+Here we generate a table showing the top 100 rows.
+
 ```{r}
 selected <- as.data.frame(selected)
 selected$log10pvalue <- log10(selected$pvalue)
@@ -187,8 +193,6 @@ selected$log10padj <- log10(selected$padj)
 selected <- selected[ , c("symbol", "baseMean", "log2FoldChange", "pvalue",
                          "log10pvalue", "padj", "log10padj")]
 ```
-
-Here we generate a table showing the top 100 rows.
 
 ```{r}
 knitr::kable(selected[1:100,])
@@ -269,5 +273,34 @@ tmp <- assay(rld)[topVarGenes, ]
 tmp <- tmp[rownames(tmp) %in% rownames(selected), ]
 autoplot(prcomp(tmp))
 ```
+
+
+## Pathway analysis
+
+The package `ReactomePA` offers the possibility to test enrichment of specific
+pathways using the free, open-source, curated and peer reviewed pathway Reactome
+pathway database.
+
+```{r}
+library(ReactomePA)
+entrez_ids <- mapIds(org.Hs.eg.db, keys = rownames(res),
+                     column = "ENTREZID", keytype = "ENSEMBL", multiVals = "first")
+entrez_ids <- entrez_ids[rownames(selected)]
+entrez_ids <- entrez_ids[!is.na(entrez_ids)]
+
+reactome_enrich <- enrichPathway(gene = entrez_ids, organism = "human", readable = TRUE)
+```
+
+Then we visualize the enriched terms.
+
+```{r fig.width=12, fig.height=10}
+barplot(reactome_enrich, showCategory = 25)
+dotplot(reactome_enrich, showCategory = 25)
+```
+
+```{r fig.width=12, fig.height=10}
+ReactomePA::emapplot(reactome_enrich, showCategory = Inf)
+```
+
 
 
