@@ -27,9 +27,15 @@ suppressPackageStartupMessages({
 
 ## Load the dataset
 
+- GSM651311 Keratinocytes, untreated 24h, rep1
+- GSM651316 Keratinocytes, DEX-treated 24h, rep1
+- GSM651321 Keratinocytes, untreated 24h, rep2
+- GSM651326 Keratinocytes, DEX-treated 24h, rep2
+
 ```{r}
 dataset <- read.celfiles(list.files(here("data/microarray"), full.names = TRUE))
-dataset <- dataset[, c(paste0(c("GSM651310", "GSM651320", "GSM651315", "GSM651325"), ".CEL.gz"))]
+#dataset <- dataset[, c(paste0(c("GSM651310", "GSM651320", "GSM651315", "GSM651325"), ".CEL.gz"))]
+dataset <- dataset[, c(paste0(c("GSM651311", "GSM651321", "GSM651316", "GSM651326"), ".CEL.gz"))]
 sampleNames(dataset) <- c("control_rep1", "control_rep2", "treat_rep1", "treat_rep2")
 pData(dataset)$group <- c("control", "control", "treat", "treat")
 dataset
@@ -220,7 +226,7 @@ We would like to visualize the distribution of p value with a histogram.
 
 ```{r}
 hist(top$P.Value, col = brewer.pal(3, name = "Set2")[1], breaks = 100,
-      main = "Control vs Treatment of DEX by 4 hours", xlab = "p-values")
+      main = "Control vs Treatment of DEX", xlab = "p-values")
 ```
 
 
@@ -255,7 +261,13 @@ selected <- top[, c("symbol", "gene_name", "logFC", "P.Value", "adj.P.Val")]
 #top <- cbind(data.frame(probeID = rownames(top), stringsAsFactors = FALSE), top)
 #rownames(top) <- NULL
 selected <- selected[selected$adj.P.Val < 0.05,]
-knitr::kable(selected)
+nrow(selected)
+```
+
+We will only show the first 100 genes.
+
+```{r}
+knitr::kable(selected[1:100,])
 ```
 
 
@@ -298,9 +310,12 @@ entrez_ids <- entrez_ids[!is.na(entrez_ids)]
 reactome_enrich <- enrichPathway(gene = entrez_ids, organism = "human")
 ```
 
-```{r}
+```{r fig.width=15, fig.height=10}
 barplot(reactome_enrich, showCategory = Inf)
 dotplot(reactome_enrich, showCategory = Inf)
+```
+
+```{r fig.width=12, fig.height=10}
 ReactomePA::emapplot(reactome_enrich, showCategory = Inf)
 ```
 
