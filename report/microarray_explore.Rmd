@@ -43,7 +43,6 @@ dataset
 boxplot(dataset, target = "core")
 ```
 
-
 ### MA plot
 
 ```{r}
@@ -171,14 +170,16 @@ edata <- subset(edata, idx_thresh_median)
 
 ## Identification of differentially expressed genes
 
-Create a simple design matrix.
+Create a design matrix. We will also consider the batch effects between replicates
+in order to remove them.
 
 ```{r}
 library(limma)
 f <- factor(c("control", "control", "treat", "treat"))
-design <- model.matrix(~ 0 + f)
+batch <- factor(c("rep1", "rep2", "rep1", "rep2"))
+design <- model.matrix(~ 0 + f + batch)
 colnames(design)
-colnames(design) <- c("control", "treat")
+colnames(design) <- c("control", "treat", "batch")
 design
 ```
 
@@ -215,37 +216,11 @@ table(top$adj.P.Val < 0.05)
 table(top$P.Value < 0.001)
 ```
 
-We notice that the number of differential expressed genes are limited, which indicates the
-the effect of 4 hour DEX treatment may not be significant in altering the gene expression.
-
-Then plot a histogram of p value distribution.
+We would like to visualize the distribution of p value with a histogram.
 
 ```{r}
-hist(top$P.Value, col = brewer.pal(3, name = "Set2")[1],
+hist(top$P.Value, col = brewer.pal(3, name = "Set2")[1], breaks = 100,
       main = "Control vs Treatment of DEX by 4 hours", xlab = "p-values")
-```
-
-We zoom in the plot to see p value distribution between 0 and 0.1.
-
-```{r}
-hist(top$P.Value[top$P.Value < 0.1], col = brewer.pal(3, name = "Set2")[1],
-      main = "Control vs Treatment of DEX by 4 hours", xlab = "p-values")
-```
-
-Zoom in again and the orange bin indicates the differentially expressed genes
-if we use a p value cutoff by 0.001.
-
-```{r}
-local({
-    breaks <- 0:10/1000
-    color1 <- brewer.pal(3, name = "Set2")[1]
-    color2 <- brewer.pal(3, name = "Set2")[2]
-    color <- rep.int(color1, length(breaks) - 1)
-    color[1] <- color2
-    data <- top$P.Value[top$P.Value < 0.01]
-    hist(data, col = color,
-         main = "Control vs Treatment of DEX by 4 hours", xlab = "p-values", breaks = breaks)
-})
 ```
 
 
@@ -273,13 +248,13 @@ top$gene_name <- get_genename(rownames(top))
 
 ## Generate a table of differentially expressed genes
 
-We use a p value cutoff by 0.001.
+We will use a cutoff of adjusted p value by 0.05.
 
 ```{r}
 selected <- top[, c("symbol", "gene_name", "logFC", "P.Value", "adj.P.Val")]
 #top <- cbind(data.frame(probeID = rownames(top), stringsAsFactors = FALSE), top)
 #rownames(top) <- NULL
-selected <- selected[selected$P.Value < 0.001,]
+selected <- selected[selected$adj.P.Val < 0.05,]
 knitr::kable(selected)
 ```
 
@@ -295,11 +270,11 @@ mat <- exprs(edata)[rownames(selected), ]
 rownames(mat) <- selected$symbol
 pData(edata)$sample_name <- rownames(pData(edata))
 anno <- as.data.frame(pData(edata))[, c("group", "sample_name")]
-pheatmap(mat, annotation_col = anno,
+pheatmap(mat, annotation_col = anno, show_rownames = FALSE,
          main = "Heatmap of gene expression levels")
 ```
 
-We can roughly divide the genes (probes) into two clusters, and the control/treat samples
+We can roughly divide the genes (probes) into three clusters, and the control/treat samples
 are also clearly separated.
 
 ## PCA plot
