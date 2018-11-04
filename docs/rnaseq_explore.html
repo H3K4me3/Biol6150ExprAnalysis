@@ -148,6 +148,7 @@ $(document).ready(function () {
 <li><a href="#pca-plot-of-genes">PCA plot of genes</a><ul>
 <li><a href="#pca-plot-of-genes-with-high-variance">PCA plot of genes with high variance</a></li>
 </ul></li>
+<li><a href="#pathway-analysis">Pathway analysis</a></li>
 </ul>
 </div>
 
@@ -329,11 +330,11 @@ library(org.Hs.eg.db)
 res$symbol &lt;- mapIds(org.Hs.eg.db, keys=row.names(res),
     column=&quot;SYMBOL&quot;, keytype=&quot;ENSEMBL&quot;, multiVals=&quot;first&quot;)</code></pre>
 <pre><code>## &#39;select()&#39; returned 1:many mapping between keys and columns</code></pre>
-<pre class="r"><code>res &lt;- res[, c(ncol(res), 1:(ncol(res)))]
+<pre class="r"><code>res &lt;- res[, c(ncol(res), 1:(ncol(res)-1))]
 head(res[order(res$pvalue),], n = 3)</code></pre>
 <pre><code>## log2 fold change (MLE): condition treat vs control 
 ## Wald test p-value: condition treat vs control 
-## DataFrame with 3 rows and 8 columns
+## DataFrame with 3 rows and 7 columns
 ##                      symbol         baseMean    log2FoldChange
 ##                 &lt;character&gt;        &lt;numeric&gt;         &lt;numeric&gt;
 ## ENSG00000241343      RPL36A 10887.8871376054 -4.06463847625495
@@ -344,11 +345,11 @@ head(res[order(res$pvalue),], n = 3)</code></pre>
 ## ENSG00000241343 0.108594662387474 -37.4294499093518 1.29721089573246e-306
 ## ENSG00000185950 0.103648480871635  35.8170396520052 5.99696386772001e-281
 ## ENSG00000183054 0.166493932393504  34.6407100620727 6.16464222513363e-263
-##                                  padj    symbol.1
-##                             &lt;numeric&gt; &lt;character&gt;
-## ENSG00000241343  2.4815644435362e-302      RPL36A
-## ENSG00000185950 5.73609593947419e-277        IRS2
-## ENSG00000183054 3.93098685889354e-259       RGPD6</code></pre>
+##                                  padj
+##                             &lt;numeric&gt;
+## ENSG00000241343  2.4815644435362e-302
+## ENSG00000185950 5.73609593947419e-277
+## ENSG00000183054 3.93098685889354e-259</code></pre>
 </div>
 <div id="generate-a-table-of-differentially-expressed-genes" class="section level2">
 <h2>Generate a table of differentially expressed genes</h2>
@@ -356,18 +357,20 @@ head(res[order(res$pvalue),], n = 3)</code></pre>
 <p>Also, since there are a lot of genes differentially expressed, we may be interested in ones that have larger fold change. We will select the ones that have abs(log2foldchange) &gt; 2.</p>
 <pre class="r"><code>selected &lt;- res[!is.na(res$padj), ]
 selected &lt;- selected[selected$padj &lt; 0.05, ]</code></pre>
+<p>We selected 10907 out of 25001 genes in the step above.</p>
 <p>The following is the distribution of log2foldchange in genes with adjusted p value &lt; 0.05. The yellow bars are ones with fold change &lt; 2, which will be filtered.</p>
 <pre class="r"><code>hist(sort(selected$log2FoldChange), breaks = 30,
      col = c(rep(&quot;white&quot;, 14), rep(&quot;yellow&quot;, 2), rep(&quot;white&quot;, 14)), xlim = c(-15, 15))</code></pre>
 <p><img src="rnaseq_explore_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <pre class="r"><code>selected &lt;- selected[abs(selected$log2FoldChange) &gt; 2, ]
 selected &lt;- selected[order(abs(selected$log2FoldChange), decreasing = TRUE), ]</code></pre>
+<p>After filtering by fold change, we finally selected 1885 genes.</p>
+<p>Here we generate a table showing the top 100 rows.</p>
 <pre class="r"><code>selected &lt;- as.data.frame(selected)
 selected$log10pvalue &lt;- log10(selected$pvalue)
 selected$log10padj &lt;- log10(selected$padj)
 selected &lt;- selected[ , c(&quot;symbol&quot;, &quot;baseMean&quot;, &quot;log2FoldChange&quot;, &quot;pvalue&quot;,
                          &quot;log10pvalue&quot;, &quot;padj&quot;, &quot;log10padj&quot;)]</code></pre>
-<p>Here we generate a table showing the top 100 rows.</p>
 <pre class="r"><code>knitr::kable(selected[1:100,])</code></pre>
 <table>
 <thead>
@@ -1443,6 +1446,25 @@ tmp &lt;- tmp[rownames(tmp) %in% rownames(selected), ]
 autoplot(prcomp(tmp))</code></pre>
 <p><img src="rnaseq_explore_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
 </div>
+</div>
+<div id="pathway-analysis" class="section level2">
+<h2>Pathway analysis</h2>
+<p>The package <code>ReactomePA</code> offers the possibility to test enrichment of specific pathways using the free, open-source, curated and peer reviewed pathway Reactome pathway database.</p>
+<pre class="r"><code>library(ReactomePA)
+entrez_ids &lt;- mapIds(org.Hs.eg.db, keys = rownames(res),
+                     column = &quot;ENTREZID&quot;, keytype = &quot;ENSEMBL&quot;, multiVals = &quot;first&quot;)</code></pre>
+<pre><code>## &#39;select()&#39; returned 1:many mapping between keys and columns</code></pre>
+<pre class="r"><code>entrez_ids &lt;- entrez_ids[rownames(selected)]
+entrez_ids &lt;- entrez_ids[!is.na(entrez_ids)]
+
+reactome_enrich &lt;- enrichPathway(gene = entrez_ids, organism = &quot;human&quot;, readable = TRUE)</code></pre>
+<p>Then we visualize the enriched terms.</p>
+<pre class="r"><code>barplot(reactome_enrich, showCategory = 25)</code></pre>
+<p><img src="rnaseq_explore_files/figure-html/unnamed-chunk-26-1.png" width="1152" /></p>
+<pre class="r"><code>dotplot(reactome_enrich, showCategory = 25)</code></pre>
+<p><img src="rnaseq_explore_files/figure-html/unnamed-chunk-26-2.png" width="1152" /></p>
+<pre class="r"><code>ReactomePA::emapplot(reactome_enrich, showCategory = Inf)</code></pre>
+<p><img src="rnaseq_explore_files/figure-html/unnamed-chunk-27-1.png" width="1152" /></p>
 </div>
 
 

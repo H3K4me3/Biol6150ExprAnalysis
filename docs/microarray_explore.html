@@ -150,6 +150,7 @@ $(document).ready(function () {
 <li><a href="#generate-a-table-of-differentially-expressed-genes">Generate a table of differentially expressed genes</a></li>
 <li><a href="#gene-clustering">Gene clustering</a></li>
 <li><a href="#pca-plot">PCA plot</a></li>
+<li><a href="#pathway-analysis">Pathway analysis</a></li>
 </ul>
 </div>
 
@@ -162,16 +163,39 @@ $(document).ready(function () {
 </div>
 <div id="load-the-dataset" class="section level2">
 <h2>Load the dataset</h2>
+<ul>
+<li>GSM651311 Keratinocytes, untreated 24h, rep1</li>
+<li>GSM651316 Keratinocytes, DEX-treated 24h, rep1</li>
+<li>GSM651321 Keratinocytes, untreated 24h, rep2</li>
+<li>GSM651326 Keratinocytes, DEX-treated 24h, rep2</li>
+</ul>
 <pre class="r"><code>dataset &lt;- read.celfiles(list.files(here(&quot;data/microarray&quot;), full.names = TRUE))</code></pre>
 <pre><code>## Loading required package: pd.hg.u95av2</code></pre>
 <pre><code>## Loading required package: RSQLite</code></pre>
 <pre><code>## Loading required package: DBI</code></pre>
 <pre><code>## Platform design info loaded.</code></pre>
-<pre><code>## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651310.CEL.gz
+<pre><code>## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651309.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651310.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651311.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651312.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651313.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651314.CEL.gz
 ## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651315.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651316.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651317.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651318.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651319.CEL.gz
 ## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651320.CEL.gz
-## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651325.CEL.gz</code></pre>
-<pre class="r"><code>dataset &lt;- dataset[, c(paste0(c(&quot;GSM651310&quot;, &quot;GSM651320&quot;, &quot;GSM651315&quot;, &quot;GSM651325&quot;), &quot;.CEL.gz&quot;))]
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651321.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651322.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651323.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651324.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651325.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651326.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651327.CEL.gz
+## Reading in : /home/jialin/Courses/code6150/data/microarray/GSM651328.CEL.gz</code></pre>
+<pre class="r"><code>#dataset &lt;- dataset[, c(paste0(c(&quot;GSM651310&quot;, &quot;GSM651320&quot;, &quot;GSM651315&quot;, &quot;GSM651325&quot;), &quot;.CEL.gz&quot;))]
+dataset &lt;- dataset[, c(paste0(c(&quot;GSM651311&quot;, &quot;GSM651321&quot;, &quot;GSM651316&quot;, &quot;GSM651326&quot;), &quot;.CEL.gz&quot;))]
 sampleNames(dataset) &lt;- c(&quot;control_rep1&quot;, &quot;control_rep2&quot;, &quot;treat_rep1&quot;, &quot;treat_rep2&quot;)
 pData(dataset)$group &lt;- c(&quot;control&quot;, &quot;control&quot;, &quot;treat&quot;, &quot;treat&quot;)
 dataset</code></pre>
@@ -297,7 +321,7 @@ pheatmap(dists, col = rev(hmcol), clustering_distance_rows = &quot;manhattan&quo
 </div>
 <div id="filter-based-on-intensity" class="section level2">
 <h2>Filter based on intensity</h2>
-<p>Microarray data commonly show a large number of probes in the background intensity range. They also do not change much across arrays. Hence they combine a low variance with a low intensity. We want to filter these results as they may contribute to false positive results in the differential expression analysis.</p>
+<p>Microarray data commonly show a large number of probes in the background intensity range. They also do not change much across arrays. Hence they combine a low variance with a low intensity. We want to filter these results as they may contribute to false positive results in the differential expression analysis. The bars represent the distribution of median intensities, the red vertical line represents the threshold value. If more than two samples of a gene have intensities larger than the threshold value, the gene will be kept.</p>
 <pre class="r"><code>edata_medians &lt;- rowMedians(exprs(edata))
 hist_res &lt;- hist(edata_medians, 100, col=&quot;#e7efd8&quot;, freq = FALSE,
                  main = &quot;Histogram of the median intensities&quot;,
@@ -307,22 +331,24 @@ emp_sd &lt;- mad(edata_medians)/2
 prop_cental &lt;- 0.50
 lines(sort(edata_medians),
       prop_cental*dnorm(sort(edata_medians), mean = emp_mu, sd = emp_sd),
-    col = &quot;grey10&quot;, lwd = 4)</code></pre>
-<p><img src="microarray_explore_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
-<pre class="r"><code>cut_val &lt;- 0.05 / prop_cental
+    col = &quot;grey10&quot;, lwd = 3)
+
+#cut_val &lt;- 0.05 / prop_cental
 thresh_median &lt;- qnorm(0.05 / prop_cental, emp_mu, emp_sd)
-samples_cutoff &lt;- 2
+abline(v = thresh_median, lwd = 4, col = &quot;red&quot;)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre class="r"><code>samples_cutoff &lt;- 2
 idx_thresh_median &lt;- apply(exprs(edata), 1, function(x){
                    sum(x &gt; thresh_median) &gt;= samples_cutoff})
 table(idx_thresh_median)</code></pre>
 <pre><code>## idx_thresh_median
 ## FALSE  TRUE 
-##  5510  7115</code></pre>
+##  4060  8565</code></pre>
 <pre class="r"><code>edata &lt;- subset(edata, idx_thresh_median)</code></pre>
 </div>
 <div id="identification-of-differentially-expressed-genes" class="section level2">
 <h2>Identification of differentially expressed genes</h2>
-<p>Create a simple design matrix.</p>
+<p>Create a design matrix. We will also consider the batch effects between replicates in order to remove them.</p>
 <pre class="r"><code>library(limma)</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;limma&#39;</code></pre>
@@ -333,31 +359,35 @@ table(idx_thresh_median)</code></pre>
 ## 
 ##     plotMA</code></pre>
 <pre class="r"><code>f &lt;- factor(c(&quot;control&quot;, &quot;control&quot;, &quot;treat&quot;, &quot;treat&quot;))
-design &lt;- model.matrix(~ 0 + f)
+batch &lt;- factor(c(&quot;rep1&quot;, &quot;rep2&quot;, &quot;rep1&quot;, &quot;rep2&quot;))
+design &lt;- model.matrix(~ 0 + f + batch)
 colnames(design)</code></pre>
-<pre><code>## [1] &quot;fcontrol&quot; &quot;ftreat&quot;</code></pre>
-<pre class="r"><code>colnames(design) &lt;- c(&quot;control&quot;, &quot;treat&quot;)
+<pre><code>## [1] &quot;fcontrol&quot;  &quot;ftreat&quot;    &quot;batchrep2&quot;</code></pre>
+<pre class="r"><code>colnames(design) &lt;- c(&quot;control&quot;, &quot;treat&quot;, &quot;batch&quot;)
 design</code></pre>
-<pre><code>##   control treat
-## 1       1     0
-## 2       1     0
-## 3       0     1
-## 4       0     1
+<pre><code>##   control treat batch
+## 1       1     0     0
+## 2       1     0     1
+## 3       0     1     0
+## 4       0     1     1
 ## attr(,&quot;assign&quot;)
-## [1] 1 1
+## [1] 1 1 2
 ## attr(,&quot;contrasts&quot;)
 ## attr(,&quot;contrasts&quot;)$f
+## [1] &quot;contr.treatment&quot;
+## 
+## attr(,&quot;contrasts&quot;)$batch
 ## [1] &quot;contr.treatment&quot;</code></pre>
 <p>We can fit the linear model, define appropriate contrast to test the hypothesis on treatment effect and compute the moderated t–statistics by calling the <code>eBayes</code> function.</p>
 <pre class="r"><code>data.fit &lt;- lmFit(exprs(edata), design)
 head(data.fit$coefficients)</code></pre>
-<pre><code>##            control    treat
-## 100_g_at  7.668756 7.715222
-## 1000_at   7.500988 7.509880
-## 1003_s_at 6.080299 5.955531
-## 1004_at   5.637423 5.510949
-## 1005_at   7.805104 9.312773
-## 1006_at   7.453394 6.403360</code></pre>
+<pre><code>##            control    treat      batch
+## 100_g_at  7.797102 8.130695 -0.2555991
+## 1000_at   7.593515 7.814241  0.1087141
+## 1002_f_at 4.612296 4.664025 -0.1417638
+## 1003_s_at 6.091525 6.084982 -0.2208167
+## 1004_at   5.848525 5.979026 -0.1795733
+## 1005_at   8.166263 9.442745 -0.3113774</code></pre>
 <pre class="r"><code>contrast.matrix &lt;- makeContrasts(treat-control,levels=design)
 data.fit.con &lt;- contrasts.fit(data.fit,contrast.matrix)
 data.fit.eb &lt;- eBayes(data.fit.con)</code></pre>
@@ -367,43 +397,26 @@ data.fit.eb &lt;- eBayes(data.fit.con)</code></pre>
 <p>Then we sort the results by their absolute t-statistics.</p>
 <pre class="r"><code>top &lt;- topTable(data.fit.eb, number = Inf)
 head(top)</code></pre>
-<pre><code>##             logFC  AveExpr        t      P.Value  adj.P.Val        B
-## 37701_at 4.487768 7.288447 23.90482 8.923836e-07 0.00634931 3.279131
-## 39528_at 2.155203 7.214587 14.46714 1.363637e-05 0.03491603 2.484241
-## 1776_at  2.090149 7.318168 13.66205 1.855341e-05 0.03491603 2.354451
-## 39681_at 2.219663 5.720843 13.51932 1.962953e-05 0.03491603 2.329679
-## 40202_at 1.941558 6.657501 12.65317 2.798882e-05 0.03982809 2.166516
-## 36630_at 1.995351 7.579214 11.72145 4.209550e-05 0.04991825 1.962962</code></pre>
+<pre><code>##              logFC  AveExpr         t      P.Value    adj.P.Val        B
+## 37989_at -4.187867 5.058882 -21.61960 3.275846e-17 2.805762e-13 28.37765
+## 38428_at -4.238118 5.624551 -17.23860 5.383859e-15 2.020411e-11 23.91131
+## 40522_at  3.109750 8.149514  17.02754 7.076745e-15 2.020411e-11 23.66414
+## 36629_at  2.923410 7.890901  16.27198 1.929437e-14 4.131408e-11 22.75146
+## 41193_at -2.827488 6.189725 -15.87952 3.299633e-14 5.652271e-11 22.25952
+## 1081_at  -3.472805 7.263600 -14.50306 2.373227e-13 3.387781e-10 20.43040</code></pre>
 <p>Check how many results can we get if we use a p value cutoff by 0.001 or an adjusted p value cutoff by 0.05.</p>
 <pre class="r"><code>table(top$adj.P.Val &lt; 0.05)</code></pre>
 <pre><code>## 
 ## FALSE  TRUE 
-##  7109     6</code></pre>
+##  8117   448</code></pre>
 <pre class="r"><code>table(top$P.Value &lt; 0.001)</code></pre>
 <pre><code>## 
 ## FALSE  TRUE 
-##  7092    23</code></pre>
-<p>We notice that the number of differential expressed genes are limited, which indicates the the effect of 4 hour DEX treatment may not be significant in altering the gene expression.</p>
-<p>Then plot a histogram of p value distribution.</p>
-<pre class="r"><code>hist(top$P.Value, col = brewer.pal(3, name = &quot;Set2&quot;)[1],
-      main = &quot;Control vs Treatment of DEX by 4 hours&quot;, xlab = &quot;p-values&quot;)</code></pre>
+##  8205   360</code></pre>
+<p>We would like to visualize the distribution of p value with a histogram.</p>
+<pre class="r"><code>hist(top$P.Value, col = brewer.pal(3, name = &quot;Set2&quot;)[1], breaks = 100,
+      main = &quot;Control vs Treatment of DEX&quot;, xlab = &quot;p-values&quot;)</code></pre>
 <p><img src="microarray_explore_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
-<p>We zoom in the plot to see p value distribution between 0 and 0.1.</p>
-<pre class="r"><code>hist(top$P.Value[top$P.Value &lt; 0.1], col = brewer.pal(3, name = &quot;Set2&quot;)[1],
-      main = &quot;Control vs Treatment of DEX by 4 hours&quot;, xlab = &quot;p-values&quot;)</code></pre>
-<p><img src="microarray_explore_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
-<p>Zoom in again and the orange bin indicates the differentially expressed genes if we use a p value cutoff by 0.001.</p>
-<pre class="r"><code>local({
-    breaks &lt;- 0:10/1000
-    color1 &lt;- brewer.pal(3, name = &quot;Set2&quot;)[1]
-    color2 &lt;- brewer.pal(3, name = &quot;Set2&quot;)[2]
-    color &lt;- rep.int(color1, length(breaks) - 1)
-    color[1] &lt;- color2
-    data &lt;- top$P.Value[top$P.Value &lt; 0.01]
-    hist(data, col = color,
-         main = &quot;Control vs Treatment of DEX by 4 hours&quot;, xlab = &quot;p-values&quot;, breaks = breaks)
-})</code></pre>
-<p><img src="microarray_explore_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
 </div>
 <div id="annotating-genes" class="section level2">
 <h2>Annotating genes</h2>
@@ -428,12 +441,15 @@ top$symbol &lt;- get_symbol(rownames(top))</code></pre>
 </div>
 <div id="generate-a-table-of-differentially-expressed-genes" class="section level2">
 <h2>Generate a table of differentially expressed genes</h2>
-<p>We use a p value cutoff by 0.001.</p>
+<p>We will use a cutoff of adjusted p value by 0.05.</p>
 <pre class="r"><code>selected &lt;- top[, c(&quot;symbol&quot;, &quot;gene_name&quot;, &quot;logFC&quot;, &quot;P.Value&quot;, &quot;adj.P.Val&quot;)]
 #top &lt;- cbind(data.frame(probeID = rownames(top), stringsAsFactors = FALSE), top)
 #rownames(top) &lt;- NULL
-selected &lt;- selected[selected$P.Value &lt; 0.001,]
-knitr::kable(selected)</code></pre>
+selected &lt;- selected[selected$adj.P.Val &lt; 0.05,]
+nrow(selected)</code></pre>
+<pre><code>## [1] 448</code></pre>
+<p>We will only show the first 100 genes.</p>
+<pre class="r"><code>knitr::kable(selected[1:100,])</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -447,188 +463,804 @@ knitr::kable(selected)</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td>37701_at</td>
-<td align="left">RGS2</td>
-<td align="left">regulator of G protein signaling 2</td>
-<td align="right">4.4877683</td>
-<td align="right">0.0000009</td>
-<td align="right">0.0063493</td>
+<td>37989_at</td>
+<td align="left">PTHLH</td>
+<td align="left">parathyroid hormone like hormone</td>
+<td align="right">-4.187867</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
 </tr>
 <tr class="even">
-<td>39528_at</td>
-<td align="left">RRAD</td>
-<td align="left">RRAD, Ras related glycolysis inhibitor and calcium channel regulator</td>
-<td align="right">2.1552028</td>
-<td align="right">0.0000136</td>
-<td align="right">0.0349160</td>
-</tr>
-<tr class="odd">
-<td>1776_at</td>
-<td align="left">RRAD</td>
-<td align="left">RRAD, Ras related glycolysis inhibitor and calcium channel regulator</td>
-<td align="right">2.0901488</td>
-<td align="right">0.0000186</td>
-<td align="right">0.0349160</td>
-</tr>
-<tr class="even">
-<td>39681_at</td>
-<td align="left">ZBTB16</td>
-<td align="left">zinc finger and BTB domain containing 16</td>
-<td align="right">2.2196632</td>
-<td align="right">0.0000196</td>
-<td align="right">0.0349160</td>
-</tr>
-<tr class="odd">
-<td>40202_at</td>
-<td align="left">KLF9</td>
-<td align="left">Kruppel like factor 9</td>
-<td align="right">1.9415580</td>
-<td align="right">0.0000280</td>
-<td align="right">0.0398281</td>
-</tr>
-<tr class="even">
-<td>36630_at</td>
-<td align="left">TSC22D3</td>
-<td align="left">TSC22 domain family member 3</td>
-<td align="right">1.9953514</td>
-<td align="right">0.0000421</td>
-<td align="right">0.0499183</td>
-</tr>
-<tr class="odd">
-<td>1814_at</td>
-<td align="left">TGFBR2</td>
-<td align="left">transforming growth factor beta receptor 2</td>
-<td align="right">1.6309718</td>
-<td align="right">0.0000782</td>
-<td align="right">0.0785749</td>
-</tr>
-<tr class="even">
-<td>36629_at</td>
-<td align="left">TSC22D3</td>
-<td align="left">TSC22 domain family member 3</td>
-<td align="right">4.2511045</td>
-<td align="right">0.0000883</td>
-<td align="right">0.0785749</td>
-</tr>
-<tr class="odd">
-<td>37760_at</td>
-<td align="left">BAIAP2</td>
-<td align="left">BAI1 associated protein 2</td>
-<td align="right">1.3443442</td>
-<td align="right">0.0001677</td>
-<td align="right">0.1325401</td>
-</tr>
-<tr class="even">
-<td>31850_at</td>
-<td align="left">GCLC</td>
-<td align="left">glutamate-cysteine ligase catalytic subunit</td>
-<td align="right">1.2492825</td>
-<td align="right">0.0002082</td>
-<td align="right">0.1481454</td>
-</tr>
-<tr class="odd">
-<td>34721_at</td>
-<td align="left">FKBP5</td>
-<td align="left">FK506 binding protein 5</td>
-<td align="right">2.8581334</td>
-<td align="right">0.0002476</td>
-<td align="right">0.1601256</td>
-</tr>
-<tr class="even">
-<td>38013_at</td>
-<td align="left">MTUS1</td>
-<td align="left">microtubule associated scaffold protein 1</td>
-<td align="right">1.1129654</td>
-<td align="right">0.0004426</td>
-<td align="right">0.2624371</td>
-</tr>
-<tr class="odd">
-<td>36100_at</td>
-<td align="left">VEGFA</td>
-<td align="left">vascular endothelial growth factor A</td>
-<td align="right">-1.2173336</td>
-<td align="right">0.0005370</td>
-<td align="right">0.2872803</td>
-</tr>
-<tr class="even">
-<td>33113_at</td>
-<td align="left">CITED2</td>
-<td align="left">Cbp/p300 interacting transactivator with Glu/Asp rich carboxy-terminal domain 2</td>
-<td align="right">1.1614203</td>
-<td align="right">0.0005779</td>
-<td align="right">0.2872803</td>
-</tr>
-<tr class="odd">
-<td>37225_at</td>
-<td align="left">KANK1</td>
-<td align="left">KN motif and ankyrin repeat domains 1</td>
-<td align="right">1.0982152</td>
-<td align="right">0.0006381</td>
-<td align="right">0.2872803</td>
-</tr>
-<tr class="even">
-<td>40855_at</td>
-<td align="left">SAMD4A</td>
-<td align="left">sterile alpha motif domain containing 4A</td>
-<td align="right">1.0942596</td>
-<td align="right">0.0006460</td>
-<td align="right">0.2872803</td>
-</tr>
-<tr class="odd">
-<td>37430_at</td>
-<td align="left">ALOX15B</td>
-<td align="left">arachidonate 15-lipoxygenase, type B</td>
-<td align="right">1.7852935</td>
-<td align="right">0.0007265</td>
-<td align="right">0.2993091</td>
-</tr>
-<tr class="even">
-<td>634_at</td>
-<td align="left">PRSS8</td>
-<td align="left">serine protease 8</td>
-<td align="right">1.0246834</td>
-<td align="right">0.0008545</td>
-<td align="right">0.2993091</td>
-</tr>
-<tr class="odd">
-<td>1052_s_at</td>
-<td align="left">CEBPD</td>
-<td align="left">CCAAT enhancer binding protein delta</td>
-<td align="right">1.2372588</td>
-<td align="right">0.0008687</td>
-<td align="right">0.2993091</td>
-</tr>
-<tr class="even">
-<td>33272_at</td>
-<td align="left">SAA1</td>
-<td align="left">serum amyloid A1</td>
-<td align="right">1.7293550</td>
-<td align="right">0.0009106</td>
-<td align="right">0.2993091</td>
+<td>38428_at</td>
+<td align="left">MMP1</td>
+<td align="left">matrix metallopeptidase 1</td>
+<td align="right">-4.238118</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
 </tr>
 <tr class="odd">
 <td>40522_at</td>
 <td align="left">GLUL</td>
 <td align="left">glutamate-ammonia ligase</td>
-<td align="right">2.8331430</td>
-<td align="right">0.0009608</td>
-<td align="right">0.2993091</td>
+<td align="right">3.109750</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
 </tr>
 <tr class="even">
-<td>33900_at</td>
-<td align="left">FSTL3</td>
-<td align="left">follistatin like 3</td>
-<td align="right">0.9502991</td>
-<td align="right">0.0009643</td>
-<td align="right">0.2993091</td>
+<td>36629_at</td>
+<td align="left">TSC22D3</td>
+<td align="left">TSC22 domain family member 3</td>
+<td align="right">2.923410</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
 </tr>
 <tr class="odd">
-<td>33131_at</td>
-<td align="left">SOX4</td>
-<td align="left">SRY-box 4</td>
-<td align="right">-0.9740144</td>
-<td align="right">0.0009675</td>
-<td align="right">0.2993091</td>
+<td>41193_at</td>
+<td align="left">DUSP6</td>
+<td align="left">dual specificity phosphatase 6</td>
+<td align="right">-2.827488</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td>1081_at</td>
+<td align="left">ODC1</td>
+<td align="left">ornithine decarboxylase 1</td>
+<td align="right">-3.472805</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td>39528_at</td>
+<td align="left">RRAD</td>
+<td align="left">RRAD, Ras related glycolysis inhibitor and calcium channel regulator</td>
+<td align="right">2.497038</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td>37701_at</td>
+<td align="left">RGS2</td>
+<td align="left">regulator of G protein signaling 2</td>
+<td align="right">2.807652</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td>39070_at</td>
+<td align="left">FSCN1</td>
+<td align="left">fascin actin-bundling protein 1</td>
+<td align="right">-2.405557</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td>37324_at</td>
+<td align="left">TFRC</td>
+<td align="left">transferrin receptor</td>
+<td align="right">2.709999</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td>33272_at</td>
+<td align="left">SAA1</td>
+<td align="left">serum amyloid A1</td>
+<td align="right">2.724206</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td>31859_at</td>
+<td align="left">MMP9</td>
+<td align="left">matrix metallopeptidase 9</td>
+<td align="right">-2.271432</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td>1776_at</td>
+<td align="left">RRAD</td>
+<td align="left">RRAD, Ras related glycolysis inhibitor and calcium channel regulator</td>
+<td align="right">2.250750</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td>700_s_at</td>
+<td align="left">MUC1</td>
+<td align="left">mucin 1, cell surface associated</td>
+<td align="right">2.965587</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td>39681_at</td>
+<td align="left">ZBTB16</td>
+<td align="left">zinc finger and BTB domain containing 16</td>
+<td align="right">2.393121</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td>615_s_at</td>
+<td align="left">PTHLH</td>
+<td align="left">parathyroid hormone like hormone</td>
+<td align="right">-2.038927</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td>37743_at</td>
+<td align="left">FEZ1</td>
+<td align="left">fasciculation and elongation protein zeta 1</td>
+<td align="right">-2.043081</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td>34898_at</td>
+<td align="left">AREG</td>
+<td align="left">amphiregulin</td>
+<td align="right">-2.033047</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td>37310_at</td>
+<td align="left">PLAU</td>
+<td align="left">plasminogen activator, urokinase</td>
+<td align="right">-1.898265</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="even">
+<td>34721_at</td>
+<td align="left">FKBP5</td>
+<td align="left">FK506 binding protein 5</td>
+<td align="right">2.159865</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="odd">
+<td>39330_s_at</td>
+<td align="left">ACTN1</td>
+<td align="left">actinin alpha 1</td>
+<td align="right">-1.959949</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="even">
+<td>35275_at</td>
+<td align="left">CA12</td>
+<td align="left">carbonic anhydrase 12</td>
+<td align="right">1.924336</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="odd">
+<td>36203_at</td>
+<td align="left">ODC1</td>
+<td align="left">ornithine decarboxylase 1</td>
+<td align="right">-2.701456</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="even">
+<td>40202_at</td>
+<td align="left">KLF9</td>
+<td align="left">Kruppel like factor 9</td>
+<td align="right">1.946240</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="odd">
+<td>31792_at</td>
+<td align="left">ANXA3</td>
+<td align="left">annexin A3</td>
+<td align="right">-2.475384</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="even">
+<td>1237_at</td>
+<td align="left">IER3</td>
+<td align="left">immediate early response 3</td>
+<td align="right">-1.882725</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="odd">
+<td>33058_at</td>
+<td align="left">KRT75</td>
+<td align="left">keratin 75</td>
+<td align="right">-1.857103</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="even">
+<td>36454_at</td>
+<td align="left">CA12</td>
+<td align="left">carbonic anhydrase 12</td>
+<td align="right">2.174531</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="odd">
+<td>34091_s_at</td>
+<td align="left">VIM</td>
+<td align="left">vimentin</td>
+<td align="right">-2.243330</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000002</td>
+</tr>
+<tr class="even">
+<td>39329_at</td>
+<td align="left">ACTN1</td>
+<td align="left">actinin alpha 1</td>
+<td align="right">-1.794896</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000002</td>
+</tr>
+<tr class="odd">
+<td>37430_at</td>
+<td align="left">ALOX15B</td>
+<td align="left">arachidonate 15-lipoxygenase, type B</td>
+<td align="right">1.822350</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000002</td>
+</tr>
+<tr class="even">
+<td>34265_at</td>
+<td align="left">SCG5</td>
+<td align="left">secretogranin V</td>
+<td align="right">-1.784317</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000003</td>
+</tr>
+<tr class="odd">
+<td>38326_at</td>
+<td align="left">G0S2</td>
+<td align="left">G0/G1 switch 2</td>
+<td align="right">-2.645540</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000003</td>
+</tr>
+<tr class="even">
+<td>34378_at</td>
+<td align="left">PLIN2</td>
+<td align="left">perilipin 2</td>
+<td align="right">1.691106</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000003</td>
+</tr>
+<tr class="odd">
+<td>38783_at</td>
+<td align="left">MUC1</td>
+<td align="left">mucin 1, cell surface associated</td>
+<td align="right">2.071283</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000003</td>
+</tr>
+<tr class="even">
+<td>38717_at</td>
+<td align="left">METTL7A</td>
+<td align="left">methyltransferase like 7A</td>
+<td align="right">1.721512</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000005</td>
+</tr>
+<tr class="odd">
+<td>33410_at</td>
+<td align="left">ITGA6</td>
+<td align="left">integrin subunit alpha 6</td>
+<td align="right">-1.720180</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000005</td>
+</tr>
+<tr class="even">
+<td>1549_s_at</td>
+<td align="left">SERPINB4</td>
+<td align="left">serpin family B member 4</td>
+<td align="right">-1.706609</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000007</td>
+</tr>
+<tr class="odd">
+<td>40091_at</td>
+<td align="left">BCL6</td>
+<td align="left">B cell CLL/lymphoma 6</td>
+<td align="right">2.030188</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000008</td>
+</tr>
+<tr class="even">
+<td>39697_at</td>
+<td align="left">HSD11B2</td>
+<td align="left">hydroxysteroid 11-beta dehydrogenase 2</td>
+<td align="right">1.926822</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000008</td>
+</tr>
+<tr class="odd">
+<td>32818_at</td>
+<td align="left">TNC</td>
+<td align="left">tenascin C</td>
+<td align="right">-1.687841</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000008</td>
+</tr>
+<tr class="even">
+<td>34281_at</td>
+<td align="left">VSNL1</td>
+<td align="left">visinin like 1</td>
+<td align="right">-1.607313</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000008</td>
+</tr>
+<tr class="odd">
+<td>927_s_at</td>
+<td align="left">MUC1</td>
+<td align="left">mucin 1, cell surface associated</td>
+<td align="right">2.001399</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000009</td>
+</tr>
+<tr class="even">
+<td>1006_at</td>
+<td align="left">MMP10</td>
+<td align="left">matrix metallopeptidase 10</td>
+<td align="right">-1.580954</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000010</td>
+</tr>
+<tr class="odd">
+<td>41246_at</td>
+<td align="left">SERPINE2</td>
+<td align="left">serpin family E member 2</td>
+<td align="right">-1.839290</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000010</td>
+</tr>
+<tr class="even">
+<td>41772_at</td>
+<td align="left">MAOA</td>
+<td align="left">monoamine oxidase A</td>
+<td align="right">1.820624</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000010</td>
+</tr>
+<tr class="odd">
+<td>34777_at</td>
+<td align="left">ADM</td>
+<td align="left">adrenomedullin</td>
+<td align="right">1.773652</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000010</td>
+</tr>
+<tr class="even">
+<td>38784_g_at</td>
+<td align="left">MUC1</td>
+<td align="left">mucin 1, cell surface associated</td>
+<td align="right">1.838938</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000014</td>
+</tr>
+<tr class="odd">
+<td>35959_at</td>
+<td align="left">ZNF365</td>
+<td align="left">zinc finger protein 365</td>
+<td align="right">-1.954610</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000016</td>
+</tr>
+<tr class="even">
+<td>36931_at</td>
+<td align="left">TAGLN</td>
+<td align="left">transgelin</td>
+<td align="right">-1.565841</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000019</td>
+</tr>
+<tr class="odd">
+<td>32242_at</td>
+<td align="left">CRYAB</td>
+<td align="left">crystallin alpha B</td>
+<td align="right">1.624378</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000019</td>
+</tr>
+<tr class="even">
+<td>1788_s_at</td>
+<td align="left">DUSP4</td>
+<td align="left">dual specificity phosphatase 4</td>
+<td align="right">-1.510940</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000020</td>
+</tr>
+<tr class="odd">
+<td>32521_at</td>
+<td align="left">SFRP1</td>
+<td align="left">secreted frizzled related protein 1</td>
+<td align="right">1.631606</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000020</td>
+</tr>
+<tr class="even">
+<td>41771_g_at</td>
+<td align="left">MAOA</td>
+<td align="left">monoamine oxidase A</td>
+<td align="right">1.543015</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000021</td>
+</tr>
+<tr class="odd">
+<td>39950_at</td>
+<td align="left">SMPDL3A</td>
+<td align="left">sphingomyelin phosphodiesterase acid like 3A</td>
+<td align="right">1.610451</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000029</td>
+</tr>
+<tr class="even">
+<td>32632_g_at</td>
+<td align="left">GBA</td>
+<td align="left">glucosylceramidase beta</td>
+<td align="right">1.761072</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000030</td>
+</tr>
+<tr class="odd">
+<td>35414_s_at</td>
+<td align="left">JAG1</td>
+<td align="left">jagged 1</td>
+<td align="right">-1.462484</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000030</td>
+</tr>
+<tr class="even">
+<td>33411_g_at</td>
+<td align="left">ITGA6</td>
+<td align="left">integrin subunit alpha 6</td>
+<td align="right">-1.616264</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000035</td>
+</tr>
+<tr class="odd">
+<td>38411_at</td>
+<td align="left">SORL1</td>
+<td align="left">sortilin related receptor 1</td>
+<td align="right">-1.465392</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000038</td>
+</tr>
+<tr class="even">
+<td>33752_at</td>
+<td align="left">IVNS1ABP</td>
+<td align="left">influenza virus NS1A binding protein</td>
+<td align="right">-1.470288</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000041</td>
+</tr>
+<tr class="odd">
+<td>32749_s_at</td>
+<td align="left">FLNA</td>
+<td align="left">filamin A</td>
+<td align="right">-1.423586</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000051</td>
+</tr>
+<tr class="even">
+<td>668_s_at</td>
+<td align="left">MMP7</td>
+<td align="left">matrix metallopeptidase 7</td>
+<td align="right">1.824695</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000051</td>
+</tr>
+<tr class="odd">
+<td>1364_at</td>
+<td align="left">PTPRZ1</td>
+<td align="left">protein tyrosine phosphatase, receptor type Z1</td>
+<td align="right">-1.553698</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000057</td>
+</tr>
+<tr class="even">
+<td>41531_at</td>
+<td align="left">TM4SF1</td>
+<td align="left">transmembrane 4 L six family member 1</td>
+<td align="right">-1.423341</td>
+<td align="right">1.0e-07</td>
+<td align="right">0.0000070</td>
+</tr>
+<tr class="odd">
+<td>35280_at</td>
+<td align="left">LAMC2</td>
+<td align="left">laminin subunit gamma 2</td>
+<td align="right">-1.535877</td>
+<td align="right">1.0e-07</td>
+<td align="right">0.0000070</td>
+</tr>
+<tr class="even">
+<td>40771_at</td>
+<td align="left">MSN</td>
+<td align="left">moesin</td>
+<td align="right">-1.370099</td>
+<td align="right">1.0e-07</td>
+<td align="right">0.0000082</td>
+</tr>
+<tr class="odd">
+<td>32570_at</td>
+<td align="left">HPGD</td>
+<td align="left">15-hydroxyprostaglandin dehydrogenase</td>
+<td align="right">1.504577</td>
+<td align="right">1.0e-07</td>
+<td align="right">0.0000097</td>
+</tr>
+<tr class="even">
+<td>213_at</td>
+<td align="left">ROR1</td>
+<td align="left">receptor tyrosine kinase like orphan receptor 1</td>
+<td align="right">1.360094</td>
+<td align="right">1.0e-07</td>
+<td align="right">0.0000112</td>
+</tr>
+<tr class="odd">
+<td>40626_at</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="right">1.412192</td>
+<td align="right">1.0e-07</td>
+<td align="right">0.0000130</td>
+</tr>
+<tr class="even">
+<td>37635_at</td>
+<td align="left">TCHH</td>
+<td align="left">trichohyalin</td>
+<td align="right">-1.342366</td>
+<td align="right">1.0e-07</td>
+<td align="right">0.0000149</td>
+</tr>
+<tr class="odd">
+<td>38356_at</td>
+<td align="left">FST</td>
+<td align="left">follistatin</td>
+<td align="right">-1.304834</td>
+<td align="right">2.0e-07</td>
+<td align="right">0.0000196</td>
+</tr>
+<tr class="even">
+<td>36671_at</td>
+<td align="left">ASNS</td>
+<td align="left">asparagine synthetase (glutamine-hydrolyzing)</td>
+<td align="right">-1.293577</td>
+<td align="right">2.0e-07</td>
+<td align="right">0.0000217</td>
+</tr>
+<tr class="odd">
+<td>151_s_at</td>
+<td align="left">TUBB</td>
+<td align="left">tubulin beta class I</td>
+<td align="right">-1.284977</td>
+<td align="right">2.0e-07</td>
+<td align="right">0.0000234</td>
+</tr>
+<tr class="even">
+<td>33436_at</td>
+<td align="left">SOX9</td>
+<td align="left">SRY-box 9</td>
+<td align="right">-1.275733</td>
+<td align="right">2.0e-07</td>
+<td align="right">0.0000252</td>
+</tr>
+<tr class="odd">
+<td>35909_at</td>
+<td align="left">PHLDA1</td>
+<td align="left">pleckstrin homology like domain family A member 1</td>
+<td align="right">-1.421403</td>
+<td align="right">3.0e-07</td>
+<td align="right">0.0000296</td>
+</tr>
+<tr class="even">
+<td>32243_g_at</td>
+<td align="left">CRYAB</td>
+<td align="left">crystallin alpha B</td>
+<td align="right">1.478674</td>
+<td align="right">3.0e-07</td>
+<td align="right">0.0000340</td>
+</tr>
+<tr class="odd">
+<td>40631_at</td>
+<td align="left">TOB1</td>
+<td align="left">transducer of ERBB2, 1</td>
+<td align="right">1.306595</td>
+<td align="right">4.0e-07</td>
+<td align="right">0.0000404</td>
+</tr>
+<tr class="even">
+<td>39087_at</td>
+<td align="left">FXYD3</td>
+<td align="left">FXYD domain containing ion transport regulator 3</td>
+<td align="right">1.250711</td>
+<td align="right">4.0e-07</td>
+<td align="right">0.0000404</td>
+</tr>
+<tr class="odd">
+<td>37157_at</td>
+<td align="left">CALB2</td>
+<td align="left">calbindin 2</td>
+<td align="right">-1.256502</td>
+<td align="right">4.0e-07</td>
+<td align="right">0.0000420</td>
+</tr>
+<tr class="even">
+<td>36791_g_at</td>
+<td align="left">TPM1</td>
+<td align="left">tropomyosin 1</td>
+<td align="right">-1.282536</td>
+<td align="right">5.0e-07</td>
+<td align="right">0.0000546</td>
+</tr>
+<tr class="odd">
+<td>36790_at</td>
+<td align="left">TPM1</td>
+<td align="left">tropomyosin 1</td>
+<td align="right">-1.372583</td>
+<td align="right">5.0e-07</td>
+<td align="right">0.0000559</td>
+</tr>
+<tr class="even">
+<td>39182_at</td>
+<td align="left">EMP3</td>
+<td align="left">epithelial membrane protein 3</td>
+<td align="right">-1.204635</td>
+<td align="right">5.0e-07</td>
+<td align="right">0.0000567</td>
+</tr>
+<tr class="odd">
+<td>39597_at</td>
+<td align="left">ABLIM3</td>
+<td align="left">actin binding LIM protein family member 3</td>
+<td align="right">1.404302</td>
+<td align="right">6.0e-07</td>
+<td align="right">0.0000633</td>
+</tr>
+<tr class="even">
+<td>32203_at</td>
+<td align="left">RBCK1</td>
+<td align="left">RANBP2-type and C3HC4-type zinc finger containing 1</td>
+<td align="right">-1.280468</td>
+<td align="right">7.0e-07</td>
+<td align="right">0.0000714</td>
+</tr>
+<tr class="odd">
+<td>1667_s_at</td>
+<td align="left">CYP4B1</td>
+<td align="left">cytochrome P450 family 4 subfamily B member 1</td>
+<td align="right">1.204252</td>
+<td align="right">8.0e-07</td>
+<td align="right">0.0000829</td>
+</tr>
+<tr class="even">
+<td>37225_at</td>
+<td align="left">KANK1</td>
+<td align="left">KN motif and ankyrin repeat domains 1</td>
+<td align="right">1.227635</td>
+<td align="right">9.0e-07</td>
+<td align="right">0.0000867</td>
+</tr>
+<tr class="odd">
+<td>1005_at</td>
+<td align="left">DUSP1</td>
+<td align="left">dual specificity phosphatase 1</td>
+<td align="right">1.276482</td>
+<td align="right">9.0e-07</td>
+<td align="right">0.0000867</td>
+</tr>
+<tr class="even">
+<td>32140_at</td>
+<td align="left">SORL1</td>
+<td align="left">sortilin related receptor 1</td>
+<td align="right">-1.172159</td>
+<td align="right">9.0e-07</td>
+<td align="right">0.0000884</td>
+</tr>
+<tr class="odd">
+<td>574_s_at</td>
+<td align="left">CASP1</td>
+<td align="left">caspase 1</td>
+<td align="right">-1.194880</td>
+<td align="right">1.0e-06</td>
+<td align="right">0.0000981</td>
+</tr>
+<tr class="even">
+<td>32382_at</td>
+<td align="left">UPK1B</td>
+<td align="left">uroplakin 1B</td>
+<td align="right">1.169892</td>
+<td align="right">1.0e-06</td>
+<td align="right">0.0000981</td>
+</tr>
+<tr class="odd">
+<td>757_at</td>
+<td align="left">ANXA2</td>
+<td align="left">annexin A2</td>
+<td align="right">-1.154000</td>
+<td align="right">1.1e-06</td>
+<td align="right">0.0000983</td>
+</tr>
+<tr class="even">
+<td>36638_at</td>
+<td align="left">CTGF</td>
+<td align="left">connective tissue growth factor</td>
+<td align="right">-1.188337</td>
+<td align="right">1.1e-06</td>
+<td align="right">0.0000983</td>
+</tr>
+<tr class="odd">
+<td>41770_at</td>
+<td align="left">MAOA</td>
+<td align="left">monoamine oxidase A</td>
+<td align="right">1.182567</td>
+<td align="right">1.1e-06</td>
+<td align="right">0.0000983</td>
+</tr>
+<tr class="even">
+<td>160031_at</td>
+<td align="left">CDH3</td>
+<td align="left">cadherin 3</td>
+<td align="right">-1.160196</td>
+<td align="right">1.1e-06</td>
+<td align="right">0.0000983</td>
+</tr>
+<tr class="odd">
+<td>35947_at</td>
+<td align="left">TGM1</td>
+<td align="left">transglutaminase 1</td>
+<td align="right">1.188614</td>
+<td align="right">1.2e-06</td>
+<td align="right">0.0001047</td>
+</tr>
+<tr class="even">
+<td>647_at</td>
+<td align="left">PROCR</td>
+<td align="left">protein C receptor</td>
+<td align="right">-1.175622</td>
+<td align="right">1.3e-06</td>
+<td align="right">0.0001191</td>
+</tr>
+<tr class="odd">
+<td>36543_at</td>
+<td align="left">F3</td>
+<td align="left">coagulation factor III, tissue factor</td>
+<td align="right">-1.131893</td>
+<td align="right">1.4e-06</td>
+<td align="right">0.0001265</td>
+</tr>
+<tr class="even">
+<td>38630_at</td>
+<td align="left">CERS6</td>
+<td align="left">ceramide synthase 6</td>
+<td align="right">1.208474</td>
+<td align="right">1.5e-06</td>
+<td align="right">0.0001332</td>
+</tr>
+<tr class="odd">
+<td>31830_s_at</td>
+<td align="left">SMTN</td>
+<td align="left">smoothelin</td>
+<td align="right">-1.182221</td>
+<td align="right">1.8e-06</td>
+<td align="right">0.0001558</td>
+</tr>
+<tr class="even">
+<td>38131_at</td>
+<td align="left">PTGES</td>
+<td align="left">prostaglandin E synthase</td>
+<td align="right">1.123511</td>
+<td align="right">1.9e-06</td>
+<td align="right">0.0001617</td>
 </tr>
 </tbody>
 </table>
@@ -641,17 +1273,37 @@ mat &lt;- exprs(edata)[rownames(selected), ]
 rownames(mat) &lt;- selected$symbol
 pData(edata)$sample_name &lt;- rownames(pData(edata))
 anno &lt;- as.data.frame(pData(edata))[, c(&quot;group&quot;, &quot;sample_name&quot;)]
-pheatmap(mat, annotation_col = anno,
+pheatmap(mat, annotation_col = anno, show_rownames = FALSE,
          main = &quot;Heatmap of gene expression levels&quot;)</code></pre>
-<p><img src="microarray_explore_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
-<p>We can roughly divide the genes (probes) into two clusters, and the control/treat samples are also clearly separated.</p>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p>We can roughly divide the genes (probes) into three clusters, and the control/treat samples are also clearly separated.</p>
 </div>
 <div id="pca-plot" class="section level2">
 <h2>PCA plot</h2>
 <pre class="r"><code>library(ggfortify)
 autoplot(prcomp(exprs(edata)[rownames(selected), ]))</code></pre>
-<p><img src="microarray_explore_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 <p>The PCA plot did not provide much useful information.</p>
+</div>
+<div id="pathway-analysis" class="section level2">
+<h2>Pathway analysis</h2>
+<pre class="r"><code>library(ReactomePA)</code></pre>
+<pre><code>## </code></pre>
+<pre><code>## ReactomePA v1.24.0  For help: https://guangchuangyu.github.io/ReactomePA
+## 
+## If you use ReactomePA in published research, please cite:
+## Guangchuang Yu, Qing-Yu He. ReactomePA: an R/Bioconductor package for reactome pathway analysis and visualization. Molecular BioSystems 2016, 12(2):477-479</code></pre>
+<pre class="r"><code>entrez_ids &lt;- mapIds(hgu95av2.db::hgu95av2.db, keys = rownames(selected),
+                     keytype = &quot;PROBEID&quot;, column = &quot;ENTREZID&quot;, multiVals = &quot;first&quot;)</code></pre>
+<pre><code>## &#39;select()&#39; returned 1:many mapping between keys and columns</code></pre>
+<pre class="r"><code>entrez_ids &lt;- entrez_ids[!is.na(entrez_ids)]
+reactome_enrich &lt;- enrichPathway(gene = entrez_ids, organism = &quot;human&quot;)</code></pre>
+<pre class="r"><code>barplot(reactome_enrich, showCategory = Inf)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-23-1.png" width="1440" /></p>
+<pre class="r"><code>dotplot(reactome_enrich, showCategory = Inf)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-23-2.png" width="1440" /></p>
+<pre class="r"><code>ReactomePA::emapplot(reactome_enrich, showCategory = Inf)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-24-1.png" width="1152" /></p>
 </div>
 
 
