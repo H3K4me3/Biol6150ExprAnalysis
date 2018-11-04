@@ -313,3 +313,20 @@ autoplot(prcomp(exprs(edata)[rownames(selected), ]))
 The PCA plot did not provide much useful information.
 
 
+## Pathway analysis
+
+```{r}
+library(ReactomePA)
+entrez_ids <- mapIds(hgu95av2.db::hgu95av2.db, keys = rownames(selected),
+                     keytype = "PROBEID", column = "ENTREZID", multiVals = "first")
+entrez_ids <- entrez_ids[!is.na(entrez_ids)]
+reactome_enrich <- enrichPathway(gene = entrez_ids, organism = "human")
+```
+
+```{r}
+barplot(reactome_enrich, showCategory = Inf)
+dotplot(reactome_enrich, showCategory = Inf)
+ReactomePA::emapplot(reactome_enrich, showCategory = Inf)
+```
+
+
