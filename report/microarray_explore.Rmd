@@ -140,7 +140,10 @@ Microarray data commonly show a large number of probes in the background
 intensity range. They also do not change much across arrays. Hence they
 combine a low variance with a low intensity. We want to filter these results
 as they may contribute to false positive results in the differential expression
-analysis.
+analysis. The bars represent the distribution of median intensities, the red
+vertical line represents the threshold value. If more than two samples of a
+gene have intensities larger than the threshold value, the gene will be
+kept.
 
 ```{r}
 edata_medians <- rowMedians(exprs(edata))
@@ -152,10 +155,12 @@ emp_sd <- mad(edata_medians)/2
 prop_cental <- 0.50
 lines(sort(edata_medians),
       prop_cental*dnorm(sort(edata_medians), mean = emp_mu, sd = emp_sd),
-    col = "grey10", lwd = 4)
+    col = "grey10", lwd = 3)
 
-cut_val <- 0.05 / prop_cental
+#cut_val <- 0.05 / prop_cental
 thresh_median <- qnorm(0.05 / prop_cental, emp_mu, emp_sd)
+abline(v = thresh_median, lwd = 4, col = "red")
+
 samples_cutoff <- 2
 idx_thresh_median <- apply(exprs(edata), 1, function(x){
 				   sum(x > thresh_median) >= samples_cutoff})
