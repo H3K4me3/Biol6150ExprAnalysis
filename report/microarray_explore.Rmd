@@ -319,4 +319,25 @@ dotplot(reactome_enrich, showCategory = Inf)
 ReactomePA::emapplot(reactome_enrich, showCategory = Inf)
 ```
 
+### Pathway analysis of up-regulated genes
+
+```{r}
+up_regulated <- selected[selected$logFC > 0, ]
+up_regulated <- up_regulated[rownames(up_regulated) %in% names(entrez_ids), ]
+ReactomePA::emapplot(
+    enrichPathway(gene = entrez_ids[rownames(up_regulated)], organism = "human"),
+    showCategory = Inf)
+```
+
+### Pathway analysis of down-regulated genes
+
+```{r fig.width=12, fig.height=10}
+down_regulated <- selected[selected$logFC < 0, ]
+down_regulated <- down_regulated[rownames(down_regulated) %in% names(entrez_ids), ]
+ReactomePA::emapplot(
+    enrichPathway(gene = entrez_ids[rownames(down_regulated)], organism = "human"),
+    showCategory = Inf)
+```
+
+
 
