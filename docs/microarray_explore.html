@@ -150,7 +150,10 @@ $(document).ready(function () {
 <li><a href="#generate-a-table-of-differentially-expressed-genes">Generate a table of differentially expressed genes</a></li>
 <li><a href="#gene-clustering">Gene clustering</a></li>
 <li><a href="#pca-plot">PCA plot</a></li>
-<li><a href="#pathway-analysis">Pathway analysis</a></li>
+<li><a href="#pathway-analysis">Pathway analysis</a><ul>
+<li><a href="#pathway-analysis-of-up-regulated-genes">Pathway analysis of up-regulated genes</a></li>
+<li><a href="#pathway-analysis-of-down-regulated-genes">Pathway analysis of down-regulated genes</a></li>
+</ul></li>
 </ul>
 </div>
 
@@ -1304,6 +1307,25 @@ reactome_enrich &lt;- enrichPathway(gene = entrez_ids, organism = &quot;human&qu
 <p><img src="microarray_explore_files/figure-html/unnamed-chunk-23-2.png" width="1440" /></p>
 <pre class="r"><code>ReactomePA::emapplot(reactome_enrich, showCategory = Inf)</code></pre>
 <p><img src="microarray_explore_files/figure-html/unnamed-chunk-24-1.png" width="1152" /></p>
+<div id="pathway-analysis-of-up-regulated-genes" class="section level3">
+<h3>Pathway analysis of up-regulated genes</h3>
+<pre class="r"><code>up_regulated &lt;- selected[selected$logFC &gt; 0, ]
+up_regulated &lt;- up_regulated[rownames(up_regulated) %in% names(entrez_ids), ]
+ReactomePA::emapplot(
+    enrichPathway(gene = entrez_ids[rownames(up_regulated)], organism = &quot;human&quot;),
+    showCategory = Inf)</code></pre>
+<pre><code>## Using `nicely` as default layout</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+</div>
+<div id="pathway-analysis-of-down-regulated-genes" class="section level3">
+<h3>Pathway analysis of down-regulated genes</h3>
+<pre class="r"><code>down_regulated &lt;- selected[selected$logFC &lt; 0, ]
+down_regulated &lt;- down_regulated[rownames(down_regulated) %in% names(entrez_ids), ]
+ReactomePA::emapplot(
+    enrichPathway(gene = entrez_ids[rownames(down_regulated)], organism = &quot;human&quot;),
+    showCategory = Inf)</code></pre>
+<p><img src="microarray_explore_files/figure-html/unnamed-chunk-26-1.png" width="1152" /></p>
+</div>
 </div>
 
 
